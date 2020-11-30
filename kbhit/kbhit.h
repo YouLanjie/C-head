@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <termios.h>
 
+#define Kbhit while (b != 0) if (kbhit()) b = 0;
+
 static struct termios initial_settings, new_settings;
 static int peek_character = -1;
 
