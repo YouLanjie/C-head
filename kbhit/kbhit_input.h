@@ -25,11 +25,23 @@ int kbhit() {
 	return 0;
 }
 
+int input() {
+	int a;
+	a = kbhit();
+	getchar();
+	return a;
+}
+
+void inputp(int *p) {
+	*p = kbhit();
+	getchar();
+}
+
 /*
-这个kbhit函数适用于if判断
+这个kbhit函数用于input输入
 在调用的时候将返回值赋值给一个int变量
 可用那个变量判断
-输入字副时毫无延迟
+输入字符时毫无延迟
 由原本的kbhit.h根据需要修改得来
 */
 
