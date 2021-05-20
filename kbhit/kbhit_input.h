@@ -37,6 +37,46 @@ void inputp(int *p) {
 	getchar();
 }
 
+int kbhit_if() {
+	struct termios oldt, newt;
+	int ch;
+	int oldf;
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+	ch = getchar();
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	fcntl(STDIN_FILENO, F_SETFL, oldf);
+	if(ch != EOF) {
+		ungetc(ch, stdin);
+		return 1;
+	}
+	return 0;
+}
+
+int kbhit2() {
+	struct termios oldt, newt;
+	int ch;
+	int oldf;
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+	ch = getchar();
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	fcntl(STDIN_FILENO, F_SETFL, oldf);
+	if(ch != EOF) {
+		ungetc(ch, stdin);
+		return ch;
+	}
+	return 0;
+}
+
 /*
 这个kbhit函数用于input输入
 在调用的时候将返回值赋值给一个int变量
