@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-#include "include.h"
-
 void menu(char a[50]) {
 	printf("\033[2;25H\033[1;32m%s",a);
 	printf("\033[5;1H\033[34m--------------------------------------------------------");

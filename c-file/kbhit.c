@@ -3,8 +3,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "include.h"
-
 /* 循环输入 */
 int kbhit() {
 	struct termios oldt, newt;
