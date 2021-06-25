@@ -13,12 +13,14 @@
 /* strcat() strcmp() strcpy() */
 
 /* kbhit */
+#include "game/kbhit.c"
 int kbhit();
 int input();
 int kbhit_if();
 int kbhit2();
 
 /* menu */
+#include "game/menu.c"
 #ifndef Menu
 	#define Menu printf("\033[0m\033[11;11H");
 #endif
