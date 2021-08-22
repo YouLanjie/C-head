@@ -1,7 +1,8 @@
 #include <stdio.h>
 
-void menu(char title[50], short p, short a) {
-	printf("\033[2;32m\033[6;26H↑\033[10;26H↓\033[11;52H\033[2;32m%d/%d\033[1;33m",p,a);
+/* 菜单#1 */
+void Menu(char title[50], short pages, short allPages) {
+	printf("\033[2;32m\033[6;26H↑\033[10;26H↓\033[11;52H\033[2;32m%d/%d\033[1;33m",pages,allPages);
 	printf("\033[2;25H\033[1;32m%s",title);
 	printf("\033[5;1H\033[34m--------------------------------------------------------");
 	printf("\033[6;1H\033[34m|\033[6;56H|");
@@ -16,7 +17,8 @@ void menu(char title[50], short p, short a) {
 	return;
 }
 
-void menu2(char title[50]) {
+/* 菜单#2 */
+void Menu2(char title[50]) {
 	printf("\033[2;25H\033[1;32m%s",title);
 	printf("\033[5;1H\033[34m--------------------------------------------------------");
 	printf("\033[6;1H\033[34m|\033[6;56H|");
