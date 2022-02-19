@@ -25,7 +25,7 @@ void Menu(char title[], short pages, short allPages) {
 }
 
 /* 菜单#2 */
-void Menu2(char title[50]) {
+void Menu2(char title[]) {
 	struct winsize size;
 
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);

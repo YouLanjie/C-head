@@ -33,8 +33,8 @@ int KbhitHas();
 int KbhitNoTime();
 
 /* menu */
-void Menu(char title[50], short p, short a);
-void Menu2(char title[50]);
+void Menu(char title[], short p, short a);
+void Menu2(char title[]);
 
 /* pid */
 /* #include <sys/types.h> */
