@@ -22,6 +22,7 @@
 #ifdef __linux
 	#include <sys/ioctl.h>
 	#include <wait.h>
+	#include <pthread.h>
 	#ifndef Clear
 		#define Clear printf("\033[2J\033[1;1H");
 	#endif
@@ -32,7 +33,7 @@
 		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
 	#endif
 	#ifndef gotoxy
-		#define gotoxy(x,y) printf("\033[%d;%dH\n",x, y)
+		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
 	#endif
 	/* kbhit */
 	int getch();
@@ -43,15 +44,17 @@
 	#include <windows.h>
 	#include <conio.h>
 	#ifndef Clear
-		#define Clear system("cls");
-		#define Clear2 system("cls");
+		#define Clear gotoxy(0, 0); for (int i = 0;i < 50; i++) { printf("                                                                             \n"); } gotoxy(0, 0);
+		#define Clear2 gotoxy(0, 0); for (int i = 0;i < 50; i++) { printf("                                                                             \n"); } gotoxy(0, 0);
+	#endif
+	#ifndef fontColorSet
+		#define fontColorSet(a,b) (a + b)
 	#endif
 	void gotoxy(int x,int y);
 #endif
 
-
 /* kbhit */
-int KbhitGetchar();
+int kbhitGetchar();
 
 /* menu */
 void Menu(char title[], short p, short a);
