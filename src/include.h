@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <signal.h>
 /* signal() */
+#include <stdarg.h>
 
 /* 预定义Linux要用到的东西 */
 #ifdef __linux
@@ -55,11 +56,6 @@
 
 /* kbhit */
 int kbhitGetchar();
-
-/* menu */
-int Menu(char *title, char *text[], int tl, int list);
-void Menu2(char title[], short p, short a);
-void Menu3(char title[]);
 
 #endif
 
