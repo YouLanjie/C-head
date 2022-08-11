@@ -615,7 +615,7 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText, int all
 		}
 		printf("\033[%d;4H%s", i + 8 - noShowText, data -> focus -> text);
 		if (data -> focus -> cfg == 1) {
-			printf("\033[%d;%dH[\033[4m%3d]\033[0m", i + 8 - noShowText, winSizeCol / 2 - 6, *(data -> focus -> var));
+			printf("\033[%d;%dH[\033[4m%7d]\033[0m", i + 8 - noShowText, winSizeCol / 2 - 10, *(data -> focus -> var));
 		}
 		else if (data -> focus -> cfg == 2) {
 			if (*(data -> focus -> var)  == 0) {
