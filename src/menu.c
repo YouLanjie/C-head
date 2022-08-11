@@ -515,7 +515,7 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText) {
 		if (data -> focus -> number == focus) {
 			printf("\033[0;7;30;47m");
 		}
-		while (*ch != '\0' && i2 - 6 - noShowText <= winSizeRol - 12) {
+		while (*ch != '\0' && i2 - 6 - noShowText <= winSizeRol - 8) {
 			if (i2 - 6 > noShowText) {       /* 限定跳过不显示的字符 */
 				/* 格式判断：自动换行、换行 */
 				if (((i >= winSizeCol - 4 && *(ch + 1) != '\0' && zhStat == 1) || (i >= winSizeCol - 6 && *ch != '\0' && zhStat == 2)) || *ch == '\n' || *ch == '\r') {
