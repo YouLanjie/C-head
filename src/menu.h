@@ -14,6 +14,7 @@ struct Text {
 	char        * text;         /* 条例内容 */
 	char        * describe;     /* 描述/帮助信息 */
 	void       (* function);    /* 调用的函数 */
+	int         * var;          /* 调整的变量值 */
 	int           number;       /* 编号 */
 	int           cfg;          /* 类型 */
 	struct Text * nextText;     /* 下一条例（链表） */
@@ -40,8 +41,10 @@ static void _menuGetFocus(menuData * data, int number);
 
 static int  _menu(menuData * data);
 static void _menuShowScreen(menuData * data);
-static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe);
 static void _menuShowText(menuData * data, int focus, int noShowText, int allChose);
+static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe);
+static void _menuShowHelp(menuData * data, int focus, int noShowText);
+static void _menuShowSitting(menuData * data, int focus, int noShowText, int allChose);
 static int  _menuInput(int * input, int * focus, int * noShowText, int allChose);
 
 #endif
