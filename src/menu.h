@@ -17,6 +17,7 @@ struct Text {
 	int         * var;          /* 调整的变量值 */
 	int           number;       /* 编号 */
 	int           cfg;          /* 类型 */
+	int           foot;         /* 调整宽度 */
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 

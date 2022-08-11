@@ -1,5 +1,4 @@
 #include "menu.h"
-#include <stdio.h>
 
 // ====================================================================== NewMenu =======================================================================
 // ======================================================================================================================================================
@@ -54,6 +53,7 @@ static void _menuAddText(menuData * data, ...) {
 	pNew -> number   = 1;
 	pNew -> describe = NULL;
 	pNew -> cfg      = 0;
+	pNew -> foot     = 1;
 	pNew -> var      = NULL;
 	pNew -> function = NULL;
 
@@ -65,6 +65,7 @@ static void _menuAddText(menuData * data, ...) {
 		pNew -> describe = NULL;
 		pNew -> number   = i;
 		pNew -> cfg      = 0;
+		pNew -> foot     = 1;
 		pNew -> var      = NULL;
 		pNew -> function = NULL;
 	}
@@ -90,6 +91,9 @@ static void _menuAddTextData(menuData * data, int type, char * format, ...) {   
 			}
 			else if (type == 2) {
 				pNew -> var = va_arg(text, int *);
+			}
+			else if (type == 3) {
+				pNew -> foot = va_arg(text, int);
 			}
 			else {
 				pNew -> function = va_arg(text, void *);
@@ -246,12 +250,12 @@ static int _menu(menuData * data) {
 				break;
 			case '+':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
-					(*data -> focus -> var)++;
+					(*data -> focus -> var) += data -> focus -> foot;
 				}
 				break;
 			case '-':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
-					(*data -> focus -> var)--;
+					(*data -> focus -> var) -= data -> focus -> foot;
 				}
 				break;
 			case '0':    /* 返回字符0 */
@@ -264,7 +268,7 @@ static int _menu(menuData * data) {
 			case 0:    /* 什么都不做 */
 				break;
 			case '\t':    /* 切换介绍与选项 */
-				if (data -> focus -> describe != NULL && data -> cfg != 3) {
+				if (data -> focus -> describe != NULL) {
 					if (!focus2) {
 						focus2 = focus;
 						focus = 1;
@@ -411,7 +415,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 		while (*ch != '\0' && i2 - 8 - noShowText2 <= winSizeRol - 10) {
 			if (i2 - 9 >= noShowText2) {       /* 限定跳过不显示的字符 */
 				/* 格式判断：自动换行、换行 */
-				if (((i >= winSizeCol / 2 - 4 && *ch != '\0' && zhStat == 1) || (i >= winSizeCol / 2 - 6 && *ch != '\0' && zhStat == 2 && zh % 3 == 0)) || *ch == '\n' || *ch == '\r') {
+				if (((i >= winSizeCol / 2 - 4 && *ch != '\0' && zhStat == 1) || (i >= winSizeCol / 2 - 6 && *ch != '\0' && zhStat == 2 )) || *ch == '\n' || *ch == '\r') {
 					/* 换行时恢复原本的颜色 */
 					if (i2 - 8 == focus2) {
 						printf("\033[0;30;47m");
@@ -440,7 +444,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 				}
 
 				if (*ch == '%' && *(ch + 1) == 'z') {    /* 开启或关闭中文打印 */
-					zhStat -= 3;
+					zhStat = 3 - zhStat;
 					ch += 2;
 				}
 
@@ -469,18 +473,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 			ch++;
 
 		}
-		ch = data -> focus -> describe;
-		*allDescribe = 1;
-		i = 0;
-		while (*ch != '\0') {
-			i++;
-			if ((i >= winSizeCol / 2 - 4 && *ch != '\0') || *ch == '\n' || *ch == '\r') {
-				(*allDescribe)++;
-				i = 0;
-				ch++;
-			}
-			ch++;
-		}
+		*allDescribe = i2 - 8;
 	}
 	return;
 }
