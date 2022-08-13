@@ -163,6 +163,22 @@ static int _menu(menuData * data) {
 	if (data -> cfg == 1) {
 		/* 仅显示屏幕框架 */
 		_menuShowScreen(data);
+		if (data -> text != NULL) {
+			focus = 0;
+			/* 打印选项 */
+			_menuShowText(data, focus, noShowText, allChose);
+			data -> getFocus(data, 1);
+		}
+		return 0;
+	}
+	else if (data -> cfg >= 4) {
+		/* 仅显示屏幕框架 */
+		_menuShowScreen(data);
+		if (data -> text != NULL) {
+			focus = 0;
+			_menuShowHelp(data, focus, noShowText);
+			data -> getFocus(data, 1);
+		}
 		return 0;
 	}
 
@@ -312,6 +328,9 @@ static void _menuShowScreen(menuData * data) {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 #endif
 
+	if (data == NULL) {
+		return;
+	}
 	//铺上底色
 	printf("\033[0;44;37m");
 	Clear
@@ -350,7 +369,9 @@ static void _menuShowScreen(menuData * data) {
 		printf("\033[7;%dH%s", winSizeCol, LineRC);                     /* 右第二连接!1&2 */
 		printf("\033[7;%dH%s", winSizeCol / 2, LineCC);                 /*  中线交界!1&2  */
 	}
-	printf("\033[3;%dH\033[1;44;37m%s\033[0m", winSizeCol / 2 - (int)strlen(data -> title) / 2, data -> title);
+	if (data -> title != NULL) {
+		printf("\033[3;%dH\033[1;44;37m%s\033[0m", winSizeCol / 2 - (int)strlen(data -> title) / 2, data -> title);
+	}
 	
 	return;
 }
@@ -361,8 +382,11 @@ static void _menuShowText(menuData * data, int focus, int noShowText, int allCho
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 #endif
 
+	if (data == NULL) {
+		return;
+	}
 	printf("\033[0;30;47m");
-	for (int i = 1; i - noShowText <= allChose && i - noShowText <= winSizeRol - 10; i++) {
+	for (int i = 1; data -> text != NULL && data -> focus != NULL && i - noShowText <= allChose && i - noShowText <= winSizeRol - 10; i++) {
 		if (i <= noShowText) {
 			continue;
 		}
@@ -393,6 +417,9 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 #endif
 
+	if (data == NULL) {
+		return;
+	}
 	/* 打底色 */
 	printf("\033[0;30;47m");
 	for (int i = 8; i <= winSizeRol - 1; i++) {
@@ -494,6 +521,9 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText) {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 #endif
 
+	if (data == NULL || data -> text == NULL) {
+		return;
+	}
 	/* 打底色 */
 	printf("\033[0;30;47m");
 	for (int i = 6; i <= winSizeRol - 1; i++) {
@@ -590,6 +620,9 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText, int all
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 #endif
 
+	if (data == NULL || data -> text == NULL) {
+		return;
+	}
 	printf("\033[0;30;47m");
 	for (int i = 1; i - noShowText <= allChose && i - noShowText <= winSizeRol - 10; i++) {
 		if (i <= noShowText) {
@@ -607,10 +640,10 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText, int all
 			printf(" ");
 		}
 		printf("\033[%d;4H%s", i + 8 - noShowText, data -> focus -> text);
-		if (data -> focus -> cfg == 1) {
+		if (data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
 			printf("\033[%d;%dH[\033[4m%7d]\033[0m", i + 8 - noShowText, winSizeCol / 2 - 10, *(data -> focus -> var));
 		}
-		else if (data -> focus -> cfg == 2) {
+		else if (data -> focus -> cfg == 2 && data -> focus -> var != NULL) {
 			if (*(data -> focus -> var)  == 0) {
 				printf("\033[%d;%dH( )\033[0m", i + 8 - noShowText, winSizeCol / 2 - 4);
 			}
