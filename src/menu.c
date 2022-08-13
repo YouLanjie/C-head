@@ -705,7 +705,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 				}
 			}
 			else {
-				Clear2
+				Clear
 				return '0';
 			}
 			break;
@@ -789,7 +789,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 			return *input;
 			break;
 	}
-	Clear2
+	Clear
 	return 0;
 }
 
