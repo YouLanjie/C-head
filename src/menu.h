@@ -44,7 +44,7 @@ static int  _menu(menuData * data);
 static void _menuShowScreen(menuData * data);
 static void _menuShowText(menuData * data, int focus, int noShowText, int allChose);
 static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe);
-static void _menuShowHelp(menuData * data, int focus, int noShowText);
+static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allHelp);
 static void _menuShowSitting(menuData * data, int focus, int noShowText, int allChose);
 static int  _menuInput(int * input, int * focus, int * noShowText, int allChose);
 
