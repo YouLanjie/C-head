@@ -45,15 +45,17 @@
 	#include <windows.h>
 	#include <conio.h>
 	#ifndef Clear
-		#define Clear gotoxy(0, 0); for (int i = 0;i < 50; i++) { printf("                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "); } gotoxy(0, 0);
+		#define Clear printf("\033[2J\033[1;1H");
 	#endif
 	#ifndef Clear2
 		#define Clear2 system("cls");
 	#endif
 	#ifndef fontColorSet
-		#define fontColorSet(a,b) (a + b)
+		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
 	#endif
-	void gotoxy(int x,int y);
+	#ifndef gotoxy
+		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+	#endif
 #endif
 
 /* kbhit */

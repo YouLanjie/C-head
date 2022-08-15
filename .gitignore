@@ -2,6 +2,6 @@
 Makefile
 main.c
 *.o
-src/*.o
 bin
 *.exe
+*.sh

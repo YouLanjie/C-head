@@ -117,13 +117,6 @@
 	#include <windows.h>
 	#include <conio.h>
 
-	void gotoxy(int x,int y) { //光标定位函数
-		COORD p;//定义结构体变量p
-		HANDLE handle=GetStdHandle(STD_OUTPUT_HANDLE);//获取当前函数句柄
-		p.X = y;
-		p.Y = x;   //将光标的目标移动位置传递给结构体
-		SetConsoleCursorPosition(handle,p);//移动光标
-	}
 	int kbhitGetchar() {
 		if (kbhit()) {
 			return getch();

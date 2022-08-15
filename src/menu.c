@@ -135,14 +135,14 @@ static void _menuGetFocus(menuData * data, int number) {
 #ifdef __linux
 #define winSizeCol size.ws_col    /* x轴 */
 #define winSizeRol size.ws_row    /* y轴 */
-#else
-#define winSizeCol 56
-#define winSizeRol 21
 #endif
 
 #ifdef __linux
 /* 定义保存窗口大小的结构体变量 */
 static struct winsize size;
+#else
+static int winSizeCol = 70;
+static int winSizeRol = 24;
 #endif
 
 /* 交换变量的值 */
@@ -159,6 +159,17 @@ static int _menu(menuData * data) {
 	       noShowText2 = 0,    /* 偏差值的备份 */
 	       allDescribe = 0,    /* 保存所有的描述字符行总数 */
 	       allChose;           /* 保存所有的选择总数 */
+
+	/* 倘若焦点指针不为空，
+	 * 则获得焦点指针指向的文本数字编号
+	 */
+	if (data -> focus != NULL) {
+		focus = data -> focus -> number;
+	}
+
+	/* 移动焦点指针到最后一条文本 */
+	data -> getFocus(data, 0);
+	allChose = data -> focus -> number;
 
 	/* 配置选项判断 */
 	if (data -> cfg == 1) {
@@ -182,17 +193,6 @@ static int _menu(menuData * data) {
 		}
 		return 0;
 	}
-
-	/* 倘若焦点指针不为空，
-	 * 则获得焦点指针指向的文本数字编号
-	 */
-	if (data -> focus != NULL) {
-		focus = data -> focus -> number;
-	}
-
-	/* 移动焦点指针到最后一条文本 */
-	data -> getFocus(data, 0);
-	allChose = data -> focus -> number;
 
 	while (input != 0x30 && input != 0x1B) {
 #ifdef __linux
@@ -245,7 +245,7 @@ static int _menu(menuData * data) {
 			/* 打印描述的按键提示 */
 			printf("\033[0;1;47;30m\033[6;%dH%sw k%s\033[%d;%dH%ss j%s\033[0m", winSizeCol / 2 - 3, ArrowOn, ArrowOn, winSizeRol - 1, winSizeCol / 2 - 3, ArrowDn, ArrowDn);
 			printf("\033[0;1;47;30m\033[%d;%dH%02d/%02d\033[0m", winSizeRol - 1, winSizeCol - 6, focus, allChose);
-			winSizeRol += 2;
+			winSizeRol = winSizeRol + 2;
 		}
 		input = getch();
 		/* 输入判断 */
@@ -318,7 +318,7 @@ static int _menu(menuData * data) {
 			}
 		}
 		else {
-			winSizeRol -= 2;
+			winSizeRol = winSizeRol - 2;
 		}
 	}
 	return 0;
