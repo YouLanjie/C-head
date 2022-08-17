@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "include.h"
 
 // ====================================================================== NewMenu =======================================================================
 // ======================================================================================================================================================
@@ -27,16 +28,18 @@
 #define ArrowLf "←"
 #define ArrowRi "→"
 
-extern void menuDataInit(menuData * data) {    /* 初始化结构体 */
-	data -> title       = NULL;
-	data -> text        = NULL;
-	data -> focus       = NULL;
-	data -> cfg         = 0;
-	data -> addText     = _menuAddText;
-	data -> addTextData = _menuAddTextData;
-	data -> getFocus    = _menuGetFocus;
-	data -> menuShow    = _menu;
-	return;
+extern menuData menuDataInit() {    /* 初始化结构体 */
+	menuData data = {
+		NULL,
+		NULL,
+		NULL,
+		0,
+		_menuAddText,
+		_menuAddTextData,
+		_menuGetFocus,
+		_menu
+	};
+	return data;
 }
 
 static void _menuAddText(menuData * data, ...) {
@@ -141,7 +144,7 @@ static void _menuGetFocus(menuData * data, int number) {
 /* 定义保存窗口大小的结构体变量 */
 static struct winsize size;
 #else
-static int winSizeCol = 70;
+static int winSizeCol = 80;
 static int winSizeRol = 24;
 #endif
 
@@ -197,6 +200,10 @@ static int _menu(menuData * data) {
 	while (input != 0x30 && input != 0x1B) {
 #ifdef __linux
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+		if (winSizeCol == 0 || winSizeRol == 0) {
+			winSizeCol = 80;
+			winSizeRol = 24;
+		}
 #endif
 
 		/* 显示屏幕框架 */
@@ -242,11 +249,12 @@ static int _menu(menuData * data) {
 			}
 		}
 		else {
-			/* 打印描述的按键提示 */
+			/* 打印帮助的按键提示 */
 			printf("\033[0;1;47;30m\033[6;%dH%sw k%s\033[%d;%dH%ss j%s\033[0m", winSizeCol / 2 - 3, ArrowOn, ArrowOn, winSizeRol - 1, winSizeCol / 2 - 3, ArrowDn, ArrowDn);
 			printf("\033[0;1;47;30m\033[%d;%dH%02d/%02d\033[0m", winSizeRol - 1, winSizeCol - 6, focus, allChose);
 			winSizeRol = winSizeRol + 2;
 		}
+		kbhitGetchar();
 		input = getch();
 		/* 输入判断 */
 		switch (_menuInput(&input, &focus, &noShowText, allChose)) {
@@ -259,7 +267,7 @@ static int _menu(menuData * data) {
 						*(data -> focus -> var) = 0;
 					}
 				}
-				else {
+				else if (data -> cfg != 3){
 					Clear2
 					char output[10];    /* 仅用作字符输出 */
 					sprintf(output, "%d", focus);
@@ -329,8 +337,11 @@ static int _menu(menuData * data) {
 
 static void _menuShowScreen(menuData * data) {
 #ifdef __linux
-	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	if (winSizeCol == 0 || winSizeRol == 0) {
+		winSizeCol = 80;
+		winSizeRol = 24;
+	}
 #endif
 
 	if (data == NULL) {
@@ -362,7 +373,7 @@ static void _menuShowScreen(menuData * data) {
 	}
 	for (int i = 2; i < winSizeCol; i++) {
 	}
-	printf("\033[%d;1H%s", winSizeCol, LineLD);                             /*   左下角   */
+	printf("\033[%d;1H%s", winSizeRol, LineLD);                             /*   左下角   */
 	printf("\033[%d;%dH%s", winSizeRol, winSizeCol, LineRD);                /*   右下角   */
 	printf("\033[1;%dH%s", winSizeCol, LineRU);                             /*   右上角   */
 	printf("\033[5;1H%s", LineLC);                                          /* 左第一连接 */
@@ -383,8 +394,11 @@ static void _menuShowScreen(menuData * data) {
 
 static void _menuShowText(menuData * data, int focus, int noShowText, int allChose) {
 #ifdef __linux
-	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	if (winSizeCol == 0 || winSizeRol == 0) {
+		winSizeCol = 80;
+		winSizeRol = 24;
+	}
 #endif
 
 	if (data == NULL) {
@@ -413,13 +427,14 @@ static void _menuShowText(menuData * data, int focus, int noShowText, int allCho
 }
 
 static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe) {
-#ifdef __linux
-	struct winsize size;
-#endif
 	char * ch = NULL;    /* 用于打印描述字符时自动折行 */
 
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	if (winSizeCol == 0 || winSizeRol == 0) {
+		winSizeCol = 80;
+		winSizeRol = 24;
+	}
 #endif
 
 	if (data == NULL) {
@@ -528,6 +543,10 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	if (winSizeCol == 0 || winSizeRol == 0) {
+		winSizeCol = 80;
+		winSizeRol = 24;
+	}
 #endif
 
 	if (data == NULL || data -> text == NULL) {
@@ -641,8 +660,11 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 
 static void _menuShowSitting(menuData * data, int focus, int noShowText, int allChose) {
 #ifdef __linux
-	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	if (winSizeCol == 0 || winSizeRol == 0) {
+		winSizeCol = 80;
+		winSizeRol = 24;
+	}
 #endif
 
 	if (data == NULL || data -> text == NULL) {

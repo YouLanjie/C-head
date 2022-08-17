@@ -74,7 +74,8 @@
 		}
 		return ch;
 	}
-	void Menu2(char title[], short pages, short allPages) {   /* 菜单#1带翻页提示的菜单 */
+
+	extern void Menu2(char title[], short pages, short allPages) {   /* 菜单#1带翻页提示的菜单 */
 		struct winsize size;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 		int winSizeCol = size.ws_col;
@@ -90,7 +91,8 @@
 		printf("\033[11;%dH\033[1;31m请选择:\033[0m", winSizeCol / 2 - 23);
 		return;
 	}
-	void Menu3(char title[]) {  /* 菜单#2纯洁 */
+
+	extern void Menu3(char title[]) {  /* 菜单#2纯洁 */
 			struct winsize size;
 			ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 			int winSizeCol = size.ws_col;
@@ -117,7 +119,7 @@
 	#include <windows.h>
 	#include <conio.h>
 
-	int kbhitGetchar() {
+	extern int kbhitGetchar() {
 		if (kbhit()) {
 			return getch();
 		}
@@ -125,7 +127,7 @@
 			return 0;
 		}
 	}
-	void Menu2(char title[], short pages, short allPages) {
+	extern void Menu2(char title[], short pages, short allPages) {
 		int winSizeCol = 56;
 
 		gotoxy(6, winSizeCol / 2 - 1);
@@ -149,7 +151,7 @@
 		gotoxy(11, winSizeCol / 2 - 23);
 		printf("请选择:");
 	}
-	void Menu3(char title[]) {
+	extern void Menu3(char title[]) {
 		int winSizeCol = 56;
 
 		gotoxy(2, winSizeCol / 2 - (int)strlen(title) / 2);
