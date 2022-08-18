@@ -1,5 +1,6 @@
-#include "menu.h"
 #include "include.h"
+#include "menu.h"
+#include <curses.h>
 
 // ====================================================================== NewMenu =======================================================================
 // ======================================================================================================================================================
@@ -39,6 +40,23 @@ extern menuData menuDataInit() {    /* 初始化结构体 */
 		_menuGetFocus,
 		_menu
 	};
+	setlocale(LC_ALL , "");
+	initscr();
+	cbreak();
+	noecho();
+	curs_set(0);
+	if (has_colors() == FALSE) {
+		endwin();
+		exit(-1);
+	}
+	start_color();
+	/* 初始化颜色对 */
+	init_pair(1, COLOR_WHITE, COLOR_BLUE);      /* 蓝底白字 */
+	init_pair(2, COLOR_BLUE, COLOR_WHITE);      /* 白底蓝字 */
+	init_pair(3, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
+	init_pair(4, COLOR_BLACK, COLOR_WHITE);     /* 白底黑字 */
+	init_pair(5, COLOR_WHITE, COLOR_BLACK);     /* 黑底白字 */
+
 	return data;
 }
 
@@ -136,16 +154,16 @@ static void _menuGetFocus(menuData * data, int number) {
 // ======================================================================================================================================================
 
 #ifdef __linux
-#define winSizeCol size.ws_col    /* x轴 */
-#define winSizeRol size.ws_row    /* y轴 */
+#define COLS size.ws_col    /* x轴 */
+#define LINES size.ws_row    /* y轴 */
 #endif
 
 #ifdef __linux
 /* 定义保存窗口大小的结构体变量 */
 static struct winsize size;
 #else
-static int winSizeCol = 80;
-static int winSizeRol = 24;
+static int COLS = 80;
+static int LINES = 24;
 #endif
 
 /* 交换变量的值 */
@@ -200,9 +218,9 @@ static int _menu(menuData * data) {
 	while (input != 0x30 && input != 0x1B) {
 #ifdef __linux
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-		if (winSizeCol == 0 || winSizeRol == 0) {
-			winSizeCol = 80;
-			winSizeRol = 24;
+		if (COLS == 0 || LINES == 0) {
+			COLS = 80;
+			LINES = 24;
 		}
 #endif
 
@@ -235,26 +253,62 @@ static int _menu(menuData * data) {
 				Swap(noShowText, noShowText2);
 
 				/* 打印描述的按键提示 */
-				printf("\033[0;1;47;30m\033[8;%dH%sw k%s\033[%d;%dH%ss j%s\033[0m", winSizeCol / 4 * 3 - 3, ArrowOn, ArrowOn, winSizeRol - 1, winSizeCol / 4 * 3 - 3, ArrowDn, ArrowDn);
-				printf("\033[0;1;47;30m\033[%d;%dH%02d/%02d\033[0m", winSizeRol - 1, winSizeCol - 6, focus, allChose);
-				printf("\033[0;1;44;37m\033[6;%dH%sTAB\033[0m", winSizeCol / 2 + 1, ArrowLf);
+				attron(A_DIM);
+				attron(COLOR_PAIR(4));
+				mvaddstr(7, COLS / 4 * 3 - 4, ArrowOn);
+				printw("w k%s", ArrowOn);
+				mvaddstr(LINES - 2, COLS / 4 * 3 - 4, ArrowDn);
+				printw("s j%s", ArrowDn);
+
+				move(LINES - 2, COLS - 7);
+				printw("%02d/%02d", focus, allChose);
+
+				attroff(COLOR_PAIR(4));
+				attroff(A_DIM);
+				attron(A_BOLD);
+				attron(COLOR_PAIR(1));
+
+				mvaddstr(5, COLS / 2, ArrowLf);
+				printw("TAB");
+
+				attroff(A_BOLD);
+				attroff(COLOR_PAIR(1));
 			}
 			else {
 				/* 打印选项的按键提示 */
-				printf("\033[0;1;44;37m\033[8;%dH%sw k%s\033[%d;%dH%ss j%s\033[0m", winSizeCol / 4 - 3, ArrowOn, ArrowOn, winSizeRol - 1, winSizeCol / 4 - 3, ArrowDn, ArrowDn);
-				printf("\033[0;1;44;37m\033[%d;%dH%02d/%02d\033[0m", winSizeRol - 1, winSizeCol / 2 - 5, focus, allChose);
+				attron(A_BOLD);
+				attron(COLOR_PAIR(1));
+				mvaddstr(7, COLS / 4 - 4, ArrowOn);
+				printw("w k%s", ArrowOn);
+				mvaddstr(LINES - 2, COLS / 4 - 4, ArrowDn);
+				printw("s j%s", ArrowDn);
+
+				move(LINES - 2, COLS / 2 - 6);
+				printw("%02d/%02d", focus, allChose);
+
 				if (data -> focus -> describe != NULL) {
-					printf("\033[0;1;44;37m\033[6;%dHTAB%s\033[0m", winSizeCol / 2 - 4, ArrowRi);
+					move(5, COLS / 2 - 5);
+					printw("TAB%s", ArrowRi);
 				}
+				attroff(A_BOLD);
+				attroff(COLOR_PAIR(1));
 			}
 		}
 		else {
-			/* 打印帮助的按键提示 */
-			printf("\033[0;1;47;30m\033[6;%dH%sw k%s\033[%d;%dH%ss j%s\033[0m", winSizeCol / 2 - 3, ArrowOn, ArrowOn, winSizeRol - 1, winSizeCol / 2 - 3, ArrowDn, ArrowDn);
-			printf("\033[0;1;47;30m\033[%d;%dH%02d/%02d\033[0m", winSizeRol - 1, winSizeCol - 6, focus, allChose);
-			winSizeRol = winSizeRol + 2;
+			/* 打印描述的按键提示 */
+			attron(COLOR_PAIR(4));
+			mvaddstr(5, COLS / 2 - 4, ArrowOn);
+			printw("w k%s", ArrowOn);
+			mvaddstr(LINES - 2, COLS / 2 - 4, ArrowDn);
+			printw("s j%s", ArrowDn);
+
+			move(LINES - 2, COLS - 7);
+			printw("%02d/%02d", focus, allChose);
+
+			attroff(COLOR_PAIR(4));
+			LINES = LINES + 2;
 		}
-		kbhitGetchar();
+		refresh();
 		input = getch();
 		/* 输入判断 */
 		switch (_menuInput(&input, &focus, &noShowText, allChose)) {
@@ -267,8 +321,8 @@ static int _menu(menuData * data) {
 						*(data -> focus -> var) = 0;
 					}
 				}
-				else if (data -> cfg != 3){
-					Clear2
+				else if (data -> cfg == 0){
+					Clear
 					char output[10];    /* 仅用作字符输出 */
 					sprintf(output, "%d", focus);
 					return output[0];
@@ -326,7 +380,7 @@ static int _menu(menuData * data) {
 			}
 		}
 		else {
-			winSizeRol = winSizeRol - 2;
+			LINES = LINES - 2;
 		}
 	}
 	return 0;
@@ -338,9 +392,9 @@ static int _menu(menuData * data) {
 static void _menuShowScreen(menuData * data) {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (winSizeCol == 0 || winSizeRol == 0) {
-		winSizeCol = 80;
-		winSizeRol = 24;
+	if (COLS == 0 || LINES == 0) {
+		COLS = 80;
+		LINES = 24;
 	}
 #endif
 
@@ -348,46 +402,51 @@ static void _menuShowScreen(menuData * data) {
 		return;
 	}
 	//铺上底色
-	printf("\033[0;44;37m");
-	Clear
-	printf("\033[1;1H");
-	printf(LineLU);
-	for (int i = 2; i < winSizeCol; i++) {
-		printf("\033[1;%dH%s", i, LineH);                 /* 第一横线 */
-		printf("\033[5;%dH%s", i, LineH);                 /* 第二横线 */
-		printf("\033[%d;%dH%s", winSizeRol, i, LineH);    /* 第三横线 */
+	attron(COLOR_PAIR(1));
+	for (int i = 0; i < LINES; i++) {
+		for (int i2 = 0; i2 < COLS; i2++) {
+			mvaddch(i, i2, ' ');
+		}
+	}
+	move(0, 0);
+	printw(LineLU);
+	for (int i = 1; i < COLS; i++) {
+		mvaddstr(0, i, LineH);            /* 第一横线 */
+		mvaddstr(4, i, LineH);            /* 第二横线 */
+		mvaddstr(LINES - 1, i, LineH);    /* 第三横线 */
 		if (data -> cfg == 0 || data -> cfg == 3) {
-			printf("\033[7;%dH%s", i, LineH);         /* 第四横线 */
+			mvaddstr(6, i, LineH);    /* 第四横线 */
 		}
 	}
 	if (data -> cfg == 0 || data -> cfg == 3) {
-		printf("\033[6;%dH选项",winSizeCol / 4 - 2);
-		printf("\033[6;%dH描述", winSizeCol /4 * 3 - 2);
+		mvaddstr(5, COLS / 4 - 3, "选项");
+		mvaddstr(5, COLS / 4 * 3 - 3, "描述");
 	}
-	for (int i = 2; i < winSizeRol; i++) {
-		printf("\033[%d;1H%s", i, LineV);                 /* 左垂线 */
-		printf("\033[%d;%dH%s", i, winSizeCol, LineV);    /* 右垂线 */
-		if (i >= 6 && (data -> cfg == 0 || data -> cfg == 3)) {
-			printf("\033[%d;%dH%s", i, winSizeCol / 2, LineV);
+	for (int i = 1; i < LINES; i++) {
+		mvaddstr(i, 0, LineV);           /* 左垂线 */
+		mvaddstr(i, COLS - 1, LineV);    /* 右垂线 */
+		if (i >= 5 && (data -> cfg == 0 || data -> cfg == 3)) {
+			mvaddstr(i, COLS / 2 - 1, LineV);    /* 中垂线 */
 		}
 	}
-	for (int i = 2; i < winSizeCol; i++) {
-	}
-	printf("\033[%d;1H%s", winSizeRol, LineLD);                             /*   左下角   */
-	printf("\033[%d;%dH%s", winSizeRol, winSizeCol, LineRD);                /*   右下角   */
-	printf("\033[1;%dH%s", winSizeCol, LineRU);                             /*   右上角   */
-	printf("\033[5;1H%s", LineLC);                                          /* 左第一连接 */
-	printf("\033[5;%dH%s", winSizeCol, LineRC);                             /* 右第一连接 */
+	mvaddstr(LINES - 1, 0       , LineLD);            /*   左下角   */
+	mvaddstr(LINES - 1, COLS - 1, LineRD);            /*   右下角   */
+	mvaddstr(0        , COLS - 1, LineRU);            /*   右上角   */
+	mvaddstr(4        , 0       , LineLC);            /* 左第一连接 */
+	mvaddstr(4        , COLS - 1, LineRC);            /* 右第一连接 */
 	if (data -> cfg == 0 || data -> cfg == 3) {
-		printf("\033[5;%dH%s", winSizeCol / 2, LineUC);	                /* 中第一连接!1&2 */
-		printf("\033[%d;%dH%s", winSizeRol ,winSizeCol / 2, LineDC);    /* 中第二连接!1&2 */
-		printf("\033[7;1H%s", LineLC);	                                /* 左第二连接!1&2 */
-		printf("\033[7;%dH%s", winSizeCol, LineRC);                     /* 右第二连接!1&2 */
-		printf("\033[7;%dH%s", winSizeCol / 2, LineCC);                 /*  中线交界!1&2  */
+		mvaddstr(4        , COLS / 2 - 1, LineUC);    /* 中第一连接!1&2 */
+		mvaddstr(LINES - 1, COLS / 2 - 1, LineDC);    /* 中第二连接!1&2 */
+		mvaddstr(6        , 0           , LineLC);    /* 左第二连接!1&2 */
+		mvaddstr(6        , COLS - 1    , LineRC);    /* 右第二连接!1&2 */
+		mvaddstr(6        , COLS / 2 - 1, LineCC);    /*  中线交界!1&2  */
 	}
 	if (data -> title != NULL) {
-		printf("\033[3;%dH\033[1;44;37m%s\033[0m", winSizeCol / 2 - (int)strlen(data -> title) / 2, data -> title);
+		attron(A_BOLD);
+		mvaddstr(2, COLS / 2 - (int)strlen(data -> title) / 2, data -> title);
+		attroff(A_BOLD);
 	}
+	attroff(COLOR_PAIR(1));
 	
 	return;
 }
@@ -395,33 +454,36 @@ static void _menuShowScreen(menuData * data) {
 static void _menuShowText(menuData * data, int focus, int noShowText, int allChose) {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (winSizeCol == 0 || winSizeRol == 0) {
-		winSizeCol = 80;
-		winSizeRol = 24;
+	if (COLS == 0 || LINES == 0) {
+		COLS = 80;
+		LINES = 24;
 	}
 #endif
 
 	if (data == NULL) {
 		return;
 	}
-	printf("\033[0;30;47m");
-	for (int i = 1; data -> text != NULL && data -> focus != NULL && i - noShowText <= allChose && i - noShowText <= winSizeRol - 10; i++) {
+	//  printf("\033[0;30;47m");    /* 白底黑字 */
+	for (int i = 1; data -> text != NULL && data -> focus != NULL && i - noShowText <= allChose && i - noShowText <= LINES - 10; i++) {
 		if (i <= noShowText) {
 			continue;
 		}
 		data -> getFocus(data, i);
 		if (i != focus) {
-			printf("\033[0;44;37m");
+			attron(COLOR_PAIR(1));
+			attroff(A_BOLD);
 		}
 		else {
-			printf("\033[1;7;47;33m");
+			attron(COLOR_PAIR(3));
+			attron(A_BOLD);
 		}
-		printf("\033[%d;4H", i + 8 - noShowText);
-		for (int i = 0; i <= winSizeCol / 2 - 7; i++) {
-			printf(" ");
+		move(i + 7 - noShowText, 3);
+		for (int i = 0; i <= COLS / 2 - 7; i++) {
+			printw(" ");
 		}
-		printf("\033[%d;4H%s\033[0m", i + 8 - noShowText, data -> focus -> text);
-		kbhitGetchar();
+		mvaddstr(i + 7 - noShowText, 3, data -> focus -> text);
+		attroff(COLOR_PAIR(2));
+		attroff(COLOR_PAIR(3));
 	}
 	return;
 }
@@ -431,9 +493,9 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (winSizeCol == 0 || winSizeRol == 0) {
-		winSizeCol = 80;
-		winSizeRol = 24;
+	if (COLS == 0 || LINES == 0) {
+		COLS = 80;
+		LINES = 24;
 	}
 #endif
 
@@ -441,13 +503,15 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 		return;
 	}
 	/* 打底色 */
-	printf("\033[0;30;47m");
-	for (int i = 8; i <= winSizeRol - 1; i++) {
-		printf("\033[%d;%dH", i, winSizeCol / 2 + 2);
-		for (int i2 = winSizeCol / 2 + 2; i2 <= winSizeCol - 2; i2++) {
-			printf(" ");
+	attron(COLOR_PAIR(4));
+	for (int i = 8; i <= LINES - 1; i++) {
+		move(i - 1, COLS / 2 + 1);
+		for (int i2 = COLS / 2 + 2; i2 <= COLS - 2; i2++) {
+			printw(" ");
 		}
 	}
+	attroff(COLOR_PAIR(4));
+	attron(COLOR_PAIR(4));
 
 	data -> getFocus(data, focus);
 	if (data -> focus -> describe != NULL) {    /* 倘若描述不为空 */
@@ -457,21 +521,22 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 		    zh     = 0,    /* 行内中文字数 */
 		    zhStat = 1;    /* 是否在打印中文 */
 
-		printf("\033[9;%dH\033[0;30;47m", winSizeCol / 2 + 3);    /* 设置颜色 */
+		move(8, COLS / 2 + 2);    /* 设置颜色 */
 		ch = data -> focus -> describe;
 		while (*ch != '\0') {    /* 按字符显示 */
 			/* 格式判断：自动换行、换行 */
-			if (((i >= winSizeCol / 2 - 4 && *ch != '\0' && zhStat == 1) || (i >= winSizeCol / 2 - 6 && *ch != '\0' && zhStat == 2 )) || *ch == '\n' || *ch == '\r') {
+			if (((i >= COLS / 2 - 4 && *ch != '\0' && zhStat == 1) || (i >= COLS / 2 - 6 && *ch != '\0' && zhStat == 2 )) || *ch == '\n' || *ch == '\r') {
 				/* 换行时恢复原本的颜色 */
 				if (i2 - 8 == focus2) {
-					printf("\033[0;30;47m");
+					attroff(COLOR_PAIR(5));
+					attron(COLOR_PAIR(4));
 				}
 
 				/* 行数增加 */
 				i2++;
 
 				/* 移动光标 */
-				printf("\033[%d;%dH", i2 - noShowText2 , winSizeCol / 2 + 3);
+				move(i2 - noShowText2 - 1, COLS / 2 + 2);
 
 				/* 字符清零 */
 				i = 0;
@@ -485,7 +550,8 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 			}
 
 			if (i2 - 8 == focus2 && !stat) {    /* 用作高亮选中项 */
-				printf("\033[0;7;30;47m");
+				attroff(COLOR_PAIR(4));
+				attron(COLOR_PAIR(5));
 				stat = 1;
 			}
 
@@ -498,13 +564,13 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 				break;
 			}
 
-			if (i2 - 9 >= noShowText2 && i2 - 8 - noShowText2 <= winSizeRol - 10) {    /* 如果超过不显示的行数 */
-				printf("%c", *ch);
+			if (i2 - 9 >= noShowText2 && i2 - 8 - noShowText2 <= LINES - 10) {    /* 如果超过不显示的行数 */
+				printw("%c", *ch);
 				if (zhStat == 2) {
 					ch++;
-					printf("%c", *ch);
+					printw("%c", *ch);
 					ch++;
-					printf("%c", *ch);
+					printw("%c", *ch);
 					zh++;
 					i += 2;
 				}
@@ -513,7 +579,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 				}
 			}
 			else {                             /* 移动光标到初始位置 */
-				printf("\033[%d%dH", i2 - noShowText2, winSizeCol / 2 + 3);
+				move(i2 - noShowText2 - 1, COLS / 2 + 3);
 				if (zhStat == 2) {
 					ch += 2;
 					zh++;
@@ -530,6 +596,8 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShow
 		}
 		*allDescribe = i2 - 8;
 	}
+	attroff(COLOR_PAIR(4));
+	attroff(COLOR_PAIR(5));
 	return;
 }
 
@@ -539,13 +607,14 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 	       i2       = 7,       /* 多少行 */
 	       i3       = 1,       /* 多少条文本 */
 	       zh       = 0,       /* 行内中文字数 */
-	       zhStat   = 1;       /* 是否在打印中文 */
+	       zhStat   = 1,       /* 是否在打印中文 */
+	       stat     = 1;
 
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (winSizeCol == 0 || winSizeRol == 0) {
-		winSizeCol = 80;
-		winSizeRol = 24;
+	if (COLS == 0 || LINES == 0) {
+		COLS = 80;
+		LINES = 24;
 	}
 #endif
 
@@ -553,16 +622,14 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 		return;
 	}
 	/* 打底色 */
-	printf("\033[0;30;47m");
-	for (int i = 6; i <= winSizeRol - 1; i++) {
-		printf("\033[%d;3H", i);
-		for (int i2 = 2; i2 <= winSizeCol - 3; i2++) {
-			printf(" ");
+	attron(COLOR_PAIR(4));
+	for (int i = 6; i <= LINES - 1; i++) {
+		move(i - 1, 2);
+		for (int i2 = 2; i2 <= COLS - 3; i2++) {
+			printw(" ");
 		}
 	}
-	kbhitGetchar();
-
-	printf("\033[7;%dH\033[0;30;47m", 4);
+	move(6, 3);
 	do {
 		data -> getFocus(data, i3);
 		if (data -> focus == NULL) {
@@ -571,32 +638,35 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 		ch = data -> focus -> text;
 		while (*ch != '\0') {
 			/* 格式判断：自动换行、换行 */
-			if (((i >= winSizeCol - 4 && *(ch + 1) != '\0' && zhStat == 1) || (i >= winSizeCol - 6 && *ch != '\0' && zhStat == 2)) || *ch == '\n' || *ch == '\r') {
+			if (((i >= COLS - 4 && *(ch + 1) != '\0' && zhStat == 1) || (i >= COLS - 6 && *ch != '\0' && zhStat == 2)) || *ch == '\n' || *ch == '\r') {
 				/* 换行时恢复原本的颜色 */
 				if (i2 - 6 == focus) {
-					printf("\033[0;30;47m");
+					attroff(COLOR_PAIR(5));
+					attron(COLOR_PAIR(4));
 				}
 
 				/* 行数增加 */
 				i2++;
 
 				/* 移动光标 */
-				printf("\033[%d;%dH", i2 - noShowText , 4);
+				move( i2 - noShowText - 1 , 3);
 
 				/* 字符清零 */
 				i = 0;
 				zh = 0;
-				kbhitGetchar();
 
 				/* 字符指针下移 */
 				if (*ch == '\n' || *ch == '\r') {
 					ch++;
 				}
+				continue;
 			}
 
 			/* 用作高亮选中项 */
-			if (i2 - 6 == focus) {
-				printf("\033[0;7;30;47m");
+			if (i2 - 6 == focus && stat == 1) {
+				attroff(COLOR_PAIR(4));
+				attron(COLOR_PAIR(5));
+				stat = 0;
 			}
 
 			if (*ch == '%' && *(ch + 1) == 'z') {    /* 开启或关闭中文打印 */
@@ -609,13 +679,13 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 				break;
 			}
 
-			if (i2 - 6 - noShowText <= winSizeRol - 8 && i2 - 6 > noShowText) {
-				printf("%c", *ch);
+			if (i2 - 6 - noShowText <= LINES - 8 && i2 - 6 > noShowText) {
+				printw("%c", *ch);
 				if (zhStat == 2) {
 					ch++;
-					printf("%c", *ch);
+					printw("%c", *ch);
 					ch++;
-					printf("%c", *ch);
+					printw("%c", *ch);
 					zh++;
 					i += 2;
 				}
@@ -623,8 +693,8 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 					i++;
 				}
 			}
-			else {                             /* 移动光标到初始位置 */
-				printf("\033[%d;4H", i2 - noShowText);
+			else {    /* 移动光标到初始位置 */
+				move(i2 - noShowText - 1, 3);
 				if (zhStat == 2) {
 					ch += 2;
 					zh++;
@@ -641,65 +711,76 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allH
 		i3++;
 		/* 换行时恢复原本的颜色 */
 		if (i2 - 6 == focus) {
-			printf("\033[0;30;47m");
+			attroff(COLOR_PAIR(5));
+			attron(COLOR_PAIR(4));
 		}
 
 		/* 行数增加 */
 		i2++;
 
 		/* 移动光标 */
-		printf("\033[%d;%dH", i2 - noShowText , 4);
+		move(i2 - noShowText - 1, 3);
 
 		/* 字符清零 */
 		i = 0;
-		kbhitGetchar();
 	}while (data -> focus -> nextText != NULL);
 	*allHelp = i2 - 7;
+	attroff(COLOR_PAIR(4));
+	attroff(COLOR_PAIR(5));
 	return;
 }
 
 static void _menuShowSitting(menuData * data, int focus, int noShowText, int allChose) {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (winSizeCol == 0 || winSizeRol == 0) {
-		winSizeCol = 80;
-		winSizeRol = 24;
+	if (COLS == 0 || LINES == 0) {
+		COLS = 80;
+		LINES = 24;
 	}
 #endif
 
 	if (data == NULL || data -> text == NULL) {
 		return;
 	}
-	printf("\033[0;30;47m");
-	for (int i = 1; i - noShowText <= allChose && i - noShowText <= winSizeRol - 10; i++) {
+	for (int i = 1; i - noShowText <= allChose && i - noShowText <= LINES - 10; i++) {
 		if (i <= noShowText) {
 			continue;
 		}
 		data -> getFocus(data, i);
 		if (i != focus) {
-			printf("\033[0;44;37m");
+			attroff(A_BOLD);
+			attroff(COLOR_PAIR(3));
+			attron(COLOR_PAIR(1));
 		}
 		else {
-			printf("\033[1;7;47;33m");
+			attroff(COLOR_PAIR(1));
+			attron(COLOR_PAIR(3));
+			attron(A_BOLD);
 		}
-		printf("\033[%d;4H", i + 8 - noShowText);
-		for (int i = 0; i <= winSizeCol / 2 - 7; i++) {
-			printf(" ");
+		move(i + 7 - noShowText, 3);
+		for (int i = 0; i <= COLS / 2 - 7; i++) {
+			printw(" ");
 		}
 		printf("\033[%d;4H%s", i + 8 - noShowText, data -> focus -> text);
 		if (data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
-			printf("\033[%d;%dH[\033[4m%7d]\033[0m", i + 8 - noShowText, winSizeCol / 2 - 10, *(data -> focus -> var));
+			mvaddch(i + 7 - noShowText, COLS / 2 - 11, '[');
+			attron(A_UNDERLINE);
+			printw("%7d", *(data -> focus -> var));
+			attroff(A_UNDERLINE);
+			printw("]");
 		}
 		else if (data -> focus -> cfg == 2 && data -> focus -> var != NULL) {
 			if (*(data -> focus -> var)  == 0) {
-				printf("\033[%d;%dH( )\033[0m", i + 8 - noShowText, winSizeCol / 2 - 4);
+				mvaddstr(i + 7 - noShowText, COLS / 2 - 5, "( )");
 			}
 			else {
-				printf("\033[%d;%dH(*)\033[0m", i + 8 - noShowText, winSizeCol / 2 - 4);
+				mvaddstr(i + 7 - noShowText, COLS / 2 - 5, "(*)");
 			}
 		}
 		kbhitGetchar();
 	}
+	attroff(COLOR_PAIR(1));
+	attroff(COLOR_PAIR(3));
 	return;
 }
 
@@ -708,7 +789,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 		case 0x1B:
 			if (kbhit() != 0) {
 				getchar();
-				*input = getch();
+				*input = getchar();
 				switch (*input) {
 					case 'A':
 					case 'D':
@@ -719,7 +800,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 							while (*focus < allChose) {
 								(*focus)++;
 							}
-							while (*focus - *noShowText > winSizeRol - 10) {
+							while (*focus - *noShowText > LINES - 10) {
 								(*noShowText)++;
 							}
 						}
@@ -739,7 +820,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 							}
 							break;
 						}
-						while (*focus - *noShowText > winSizeRol - 10) {
+						while (*focus - *noShowText > LINES - 10) {
 							(*noShowText)++;
 						}
 						break;
@@ -768,7 +849,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 				}
 				break;
 			}
-			while (*focus - *noShowText > winSizeRol - 10) {
+			while (*focus - *noShowText > LINES - 10) {
 				(*noShowText)++;
 			}
 			break;
@@ -782,7 +863,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 			while (*focus < allChose) {
 				(*focus)++;
 			}
-			while (*focus - *noShowText > winSizeRol - 10) {
+			while (*focus - *noShowText > LINES - 10) {
 				(*noShowText)++;
 			}
 			break;
@@ -801,7 +882,7 @@ static int _menuInput(int * input, int * focus, int * noShowText, int allChose) 
 				while (*focus < allChose) {
 					(*focus)++;
 				}
-				while (*focus - *noShowText > winSizeRol - 10) {
+				while (*focus - *noShowText > LINES - 10) {
 					(*noShowText)++;
 				}
 			}

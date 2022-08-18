@@ -21,41 +21,44 @@
 
 /* 预定义Linux要用到的东西 */
 #ifdef __linux
-	#include <sys/ioctl.h>
-	#include <wait.h>
-	#include <pthread.h>
-	#ifndef Clear
-		#define Clear printf("\033[2J\033[1;1H");
-	#endif
-	#ifndef Clear2
-		#define Clear2 system("clear");
-	#endif
-	#ifndef fontColorSet
-		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-	#endif
-	#ifndef gotoxy
-		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
-	#endif
-	/* kbhit */
-	int getch();
-	int kbhit();
+#include <sys/ioctl.h>
+#include <wait.h>
+#include <pthread.h>
+#include <ncurses.h>
+#include <locale.h>
+
+#ifndef Clear
+	#define Clear clear();
+#endif
+#ifndef Clear2
+	#define Clear2 clear();
+#endif
+#ifndef fontColorSet
+	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
+#endif
+#ifndef gotoxy
+	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#endif
+/* kbhit */
+int kbhit();
 #endif
 /* 预定义windows要用到的东西 */
 #ifdef _WIN32
-	#include <windows.h>
-	#include <conio.h>
-	#ifndef Clear
-		#define Clear printf("\033[2J\033[1;1H");
-	#endif
-	#ifndef Clear2
-		#define Clear2 system("cls");
-	#endif
-	#ifndef fontColorSet
-		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-	#endif
-	#ifndef gotoxy
-		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
-	#endif
+#include <windows.h>
+#include <conio.h>
+
+#ifndef Clear
+	#define Clear printf("\033[2J\033[1;1H");
+#endif
+#ifndef Clear2
+	#define Clear2 system("cls");
+#endif
+#ifndef fontColorSet
+	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
+#endif
+#ifndef gotoxy
+	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#endif
 #endif
 
 /* kbhit */
