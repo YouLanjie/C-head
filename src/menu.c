@@ -463,7 +463,6 @@ static void _menuShowText(menuData * data, int focus, int noShowText, int allCho
 	if (data == NULL) {
 		return;
 	}
-	//  printf("\033[0;30;47m");    /* 白底黑字 */
 	for (int i = 1; data -> text != NULL && data -> focus != NULL && i - noShowText <= allChose && i - noShowText <= LINES - 10; i++) {
 		if (i <= noShowText) {
 			continue;
@@ -478,7 +477,7 @@ static void _menuShowText(menuData * data, int focus, int noShowText, int allCho
 			attron(A_BOLD);
 		}
 		move(i + 7 - noShowText, 3);
-		for (int i = 0; i <= COLS / 2 - 7; i++) {
+		for (int i = 0; i <= COLS / 2 - 6; i++) {
 			printw(" ");
 		}
 		mvaddstr(i + 7 - noShowText, 3, data -> focus -> text);
@@ -758,10 +757,10 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText, int all
 			attron(A_BOLD);
 		}
 		move(i + 7 - noShowText, 3);
-		for (int i = 0; i <= COLS / 2 - 7; i++) {
+		for (int i = 0; i <= COLS / 2 - 6; i++) {
 			printw(" ");
 		}
-		printf("\033[%d;4H%s", i + 8 - noShowText, data -> focus -> text);
+		mvaddstr(i + 7 - noShowText, 3, data -> focus -> text);
 		if (data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
 			mvaddch(i + 7 - noShowText, COLS / 2 - 11, '[');
 			attron(A_UNDERLINE);
@@ -777,7 +776,7 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText, int all
 				mvaddstr(i + 7 - noShowText, COLS / 2 - 5, "(*)");
 			}
 		}
-		kbhitGetchar();
+		refresh();
 	}
 	attroff(COLOR_PAIR(1));
 	attroff(COLOR_PAIR(3));
