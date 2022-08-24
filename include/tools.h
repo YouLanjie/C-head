@@ -21,41 +21,59 @@
 
 /* 预定义Linux要用到的东西 */
 #ifdef __linux
-	#include <sys/ioctl.h>
-	#include <wait.h>
-	#include <pthread.h>
-	#ifndef Clear
-		#define Clear printf("\033[2J\033[1;1H");
-	#endif
-	#ifndef Clear2
-		#define Clear2 system("clear");
-	#endif
-	#ifndef fontColorSet
-		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-	#endif
-	#ifndef gotoxy
-		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
-	#endif
-	/* kbhit */
-	int getch();
-	int kbhit();
+#include <sys/ioctl.h>
+#include <wait.h>
+#include <pthread.h>
+
+#ifndef Clear
+	#define Clear printf("\033[2J\033[1;1H");
+#endif
+#ifndef Clear2
+	#define Clear2 system("clear");
+#endif
+#ifndef fontColorSet
+	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
+#endif
+#ifndef gotoxy
+	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#endif
+
+#define menuType_OnlyMain    1
+#define menuType_Help        2
+#define menuType_Setting     3
+#define menuType_OnlyHelp    4
+
+#define menuTextTypeNumber   1
+#define menuTextTypeButton   1
+
+#define menuTextDataDescribe 0
+#define menuTextDataSetType  1
+#define menuTextDataSetVar   2
+#define menuTextDataSetFoot  3
+#define menuTextDataSetMax   4
+#define menuTextDataSetMin   5
+
+/* kbhit */
+int getch();
+int kbhit();
 #endif
 /* 预定义windows要用到的东西 */
 #ifdef _WIN32
-	#include <windows.h>
-	#include <conio.h>
-	#ifndef Clear
-		#define Clear printf("\033[2J\033[1;1H");
-	#endif
-	#ifndef Clear2
-		#define Clear2 system("cls");
-	#endif
-	#ifndef fontColorSet
-		#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-	#endif
-	#ifndef gotoxy
-		#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
-	#endif
+#include <windows.h>
+#include <conio.h>
+
+#ifndef Clear
+	#define Clear printf("\033[2J\033[1;1H");
+#endif
+#ifndef Clear2
+	#define Clear2 system("cls");
+#endif
+#ifndef fontColorSet
+	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
+#endif
+#ifndef gotoxy
+	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#endif
 #endif
 
 /* kbhit */
@@ -77,6 +95,8 @@ struct Text {
 	int           number;       /* 编号 */
 	int           cfg;          /* 类型：1数值，2开关 */
 	int           foot;         /* 设置的步长 */
+	int           max;          /* 设置的最大值 */
+	int           min;          /* 设置的最小值 */
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 

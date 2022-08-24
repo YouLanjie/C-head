@@ -57,6 +57,10 @@ static void _menuAddText(menuData * data, ...) {
 	pNew -> describe = NULL;
 	pNew -> cfg      = 0;
 	pNew -> foot     = 1;
+	//  pNew -> max      = 2147483647;    /* 整型的最大值 */
+	//  pNew -> min      = -2147483648;    /* 整型的最小值 */
+	pNew -> max      = 10000000;
+	pNew -> min      = -10000000;
 	pNew -> var      = NULL;
 	pNew -> function = NULL;
 
@@ -69,6 +73,10 @@ static void _menuAddText(menuData * data, ...) {
 		pNew -> number   = i;
 		pNew -> cfg      = 0;
 		pNew -> foot     = 1;
+		//  pNew -> max      = 2147483647;    /* 整型的最大值 */
+		//  pNew -> min      = -2147483648;    /* 整型的最小值 */
+		pNew -> max      = 10000000;
+		pNew -> min      = -10000000;
 		pNew -> var      = NULL;
 		pNew -> function = NULL;
 	}
@@ -97,6 +105,12 @@ static void _menuAddTextData(menuData * data, int type, char * format, ...) {   
 			}
 			else if (type == 3) {
 				pNew -> foot = va_arg(text, int);
+			}
+			else if (type == 4) {
+				pNew -> max = va_arg(text, int);
+			}
+			else if (type == 5) {
+				pNew -> min = va_arg(text, int);
 			}
 			else {
 				pNew -> function = va_arg(text, void *);
@@ -267,7 +281,7 @@ static int _menu(menuData * data) {
 						*(data -> focus -> var) = 0;
 					}
 				}
-				else if (data -> cfg != 3){
+				else if (data -> cfg == 0){
 					Clear2
 					char output[10];    /* 仅用作字符输出 */
 					sprintf(output, "%d", focus);
@@ -276,12 +290,22 @@ static int _menu(menuData * data) {
 				break;
 			case '+':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
-					(*data -> focus -> var) += data -> focus -> foot;
+					if ((*data -> focus -> var) + data -> focus -> foot > data -> focus -> max) {
+						(*data -> focus -> var) = data -> focus -> min;
+					}
+					else {
+						(*data -> focus -> var) += data -> focus -> foot;
+					}
 				}
 				break;
 			case '-':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
-					(*data -> focus -> var) -= data -> focus -> foot;
+					if ((*data -> focus -> var) - data -> focus -> foot < data -> focus -> min) {
+						(*data -> focus -> var) = data -> focus -> max;
+					}
+					else {
+						(*data -> focus -> var) -= data -> focus -> foot;
+					}
 				}
 				break;
 			case '0':    /* 返回字符0 */
