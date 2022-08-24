@@ -39,6 +39,22 @@
 #ifndef gotoxy
 	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
 #endif
+
+#define menuType_OnlyMain    1
+#define menuType_Help        2
+#define menuType_Setting     3
+#define menuType_OnlyHelp    4
+
+#define menuTextTypeNumber   1
+#define menuTextTypeButton   1
+
+#define menuTextDataDescribe 0
+#define menuTextDataSetType  1
+#define menuTextDataSetVar   2
+#define menuTextDataSetFoot  3
+#define menuTextDataSetMax   4
+#define menuTextDataSetMin   5
+
 /* kbhit */
 int kbhit();
 #endif
