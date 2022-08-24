@@ -80,6 +80,8 @@ struct Text {
 	int           number;       /* 编号 */
 	int           cfg;          /* 类型：1数值，2开关 */
 	int           foot;         /* 设置的步长 */
+	int           max;          /* 设置的最大值 */
+	int           min;          /* 设置的最小值 */
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 

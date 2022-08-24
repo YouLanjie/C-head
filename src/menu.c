@@ -75,6 +75,8 @@ static void _menuAddText(menuData * data, ...) {
 	pNew -> describe = NULL;
 	pNew -> cfg      = 0;
 	pNew -> foot     = 1;
+	pNew -> max      = 2147483647;    /* 整型的最大值 */
+	pNew -> min      = -2147483648;    /* 整型的最小值 */
 	pNew -> var      = NULL;
 	pNew -> function = NULL;
 
@@ -330,11 +332,17 @@ static int _menu(menuData * data) {
 				break;
 			case '+':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
+					if ((*data -> focus -> var) + data -> focus -> foot > data -> focus -> max) {
+						break;
+					}
 					(*data -> focus -> var) += data -> focus -> foot;
 				}
 				break;
 			case '-':
 				if (data -> cfg == 3 && data -> focus -> cfg == 1 && data -> focus -> var != NULL) {
+					if ((*data -> focus -> var) + data -> focus -> foot < data -> focus -> min) {
+						break;
+					}
 					(*data -> focus -> var) -= data -> focus -> foot;
 				}
 				break;
