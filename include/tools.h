@@ -41,8 +41,10 @@
 #endif
 
 /* kbhit */
-int kbhit();
+extern int kbhit();
+extern int getch_old();
 #endif
+
 /* 预定义windows要用到的东西 */
 #ifdef _WIN32
 #include <windows.h>
@@ -63,12 +65,12 @@ int kbhit();
 #endif
 
 /* kbhit */
-int kbhitGetchar();
+extern int kbhitGetchar();
 
 /* menu */
-int Menu(char *title, char *text[], int tl, int list);
-void Menu2(char title[], short p, short a);
-void Menu3(char title[]);
+extern int Menu(char *title, char *text[], int tl, int list);
+extern void Menu2(char title[], short p, short a);
+extern void Menu3(char title[]);
 
 
 // The new menu function.
