@@ -93,13 +93,14 @@ typedef struct _menuData{
 	struct Text  *       text;                                                                       /* 条例链表头 */
 	struct Text  *       focus;                                                                      /* 选中的条例 */
 	int                  cfg;                                                                        /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
-	void        (* const addText)    (struct _menuData * data, ...);                                 /* 添加条例 */
-	void        (* const addTextData)(struct _menuData * data, int type, char * format, ...);        /* 添加条例信息 */
-	void        (* const getFocus)   (struct _menuData * data, int number);                          /* 更改焦点指针 */
-	int         (* const menuShow)   (struct _menuData * data);                                      /* 更改焦点指针 */
 }menuData;                                                                                        /* 菜单类/结构体 */
 
-extern menuData menuDataInit();
+extern void ctools_ncurse_init();
+extern void ctools_menu_Init();
+extern void ctools_menu_AddText(menuData * data, ...);
+extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ...);
+extern void ctools_menu_GetFocus(menuData * data, int number);
+extern int  ctools_menu_Show(menuData * data);
 
 #define menuType_OnlyMain    1
 #define menuType_Help        2

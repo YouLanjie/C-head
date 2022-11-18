@@ -27,18 +27,8 @@
 #define ArrowLf "←"
 #define ArrowRi "→"
 
-extern menuData menuDataInit()
+extern void ctools_menu_Init()
 {				/* 初始化结构体 */
-	menuData data = {
-		NULL,
-		NULL,
-		NULL,
-		0,
-		_menuAddText,
-		_menuAddTextData,
-		_menuGetFocus,
-		_menu
-	};
 	setlocale(LC_ALL, "");
 	initscr();
 	cbreak();
@@ -55,11 +45,10 @@ extern menuData menuDataInit()
 	init_pair(3, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
 	init_pair(4, COLOR_BLACK, COLOR_WHITE);     /* 白底黑字 */
 	init_pair(5, COLOR_WHITE, COLOR_BLACK);     /* 黑底白字 */
-
-	return data;
+	return;
 }
 
-static void _menuAddText(menuData * data, ...)
+extern void ctools_menu_AddText(menuData * data, ...)
 {
 	struct Text *pNew, *pTmp;
 	va_list text;
@@ -104,7 +93,7 @@ static void _menuAddText(menuData * data, ...)
 	return;
 }
 
-static void _menuAddTextData(menuData * data, int type, char *format, ...)
+extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ...)
 {				/* type:0 -> describe, 1 -> function */
 	struct Text *pNew;
 	va_list text;
@@ -139,7 +128,7 @@ static void _menuAddTextData(menuData * data, int type, char *format, ...)
 	return;
 }
 
-static void _menuGetFocus(menuData * data, int number)
+extern void ctools_menu_GetFocus(menuData * data, int number)
 {
 	if (data->focus == NULL) {
 		data->focus = data->text;
@@ -181,7 +170,7 @@ static int LINES = 24;
 	b=a^b;    \
 	a=a^b;
 
-static int _menu(menuData * data)
+extern int  ctools_menu_Show(menuData * data)
 {
 	int input = 1,		/* 保存输入 */
 	    focus = 1,		/* 保存焦点选项的数字 */
@@ -199,27 +188,27 @@ static int _menu(menuData * data)
 	}
 
 	/* 移动焦点指针到最后一条文本 */
-	data->getFocus(data, 0);
+	ctools_menu_GetFocus(data, 0);
 	allChose = data->focus->number;
 
 	/* 配置选项判断 */
 	if (data->cfg == 1) {
 		/* 仅显示屏幕框架 */
-		_menuShowScreen(data);
+		_ctools_menu_ShowScreen(data);
 		if (data->text != NULL) {
 			focus = 0;
 			/* 打印选项 */
-			_menuShowText(data, focus, noShowText, allChose);
-			data->getFocus(data, 1);
+			_ctools_menu_ShowText(data, focus, noShowText, allChose);
+			ctools_menu_GetFocus(data, 1);
 		}
 		return 0;
 	} else if (data->cfg >= 4) {
 		/* 仅显示屏幕框架 */
-		_menuShowScreen(data);
+		_ctools_menu_ShowScreen(data);
 		if (data->text != NULL) {
 			focus = 0;
-			_menuShowHelp(data, focus, noShowText, &allChose);
-			data->getFocus(data, 1);
+			_ctools_menu_ShowHelp(data, focus, noShowText, &allChose);
+			ctools_menu_GetFocus(data, 1);
 		}
 		return 0;
 	}
@@ -234,24 +223,24 @@ static int _menu(menuData * data)
 #endif
 
 		/* 显示屏幕框架 */
-		_menuShowScreen(data);
+		_ctools_menu_ShowScreen(data);
 
 		if (data->cfg != 2) {
 			/* 显示焦点选项的描述 */
-			_menuShowDescribe(data, focus, focus2, noShowText2,
+			_ctools_menu_ShowDescribe(data, focus, focus2, noShowText2,
 					  &allDescribe);
 		}
 		if (data->cfg == 0) {
 			/* 打印选项 */
-			_menuShowText(data, focus, noShowText, allChose);
+			_ctools_menu_ShowText(data, focus, noShowText, allChose);
 		} else if (data->cfg == 2) {
-			_menuShowHelp(data, focus, noShowText, &allChose);
+			_ctools_menu_ShowHelp(data, focus, noShowText, &allChose);
 		} else if (data->cfg == 3) {
-			_menuShowSitting(data, focus, noShowText, allChose);
+			_ctools_menu_ShowSitting(data, focus, noShowText, allChose);
 		}
 
 		/* 移动焦点指针到焦点文本 */
-		data->getFocus(data, focus);
+		ctools_menu_GetFocus(data, focus);
 
 		if (data->cfg != 2) {
 			/* 交换变量的值 */
@@ -317,7 +306,7 @@ static int _menu(menuData * data)
 		refresh();
 		input = getch();
 		/* 输入判断 */
-		switch (_menuInput(&input, &focus, &noShowText, allChose)) {
+		switch (_ctools_menu_Input(&input, &focus, &noShowText, allChose)) {
 		case '\n':	/* 返回字符 */
 			if (data->cfg == 3 && data->focus->cfg == 2
 			    && data->focus->var != NULL) {
@@ -358,7 +347,7 @@ static int _menu(menuData * data)
 			break;
 		case '0':	/* 返回字符0 */
 			Clear if (data->cfg == 2) {
-				data->getFocus(data, 1);
+				ctools_menu_GetFocus(data, 1);
 			}
 			return '0';
 			break;
@@ -404,7 +393,7 @@ static int _menu(menuData * data)
 // MenuScreen
 // ======================================================================================================================================================
 
-static void _menuShowScreen(menuData * data)
+static void _ctools_menu_ShowScreen(menuData * data)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -468,8 +457,7 @@ static void _menuShowScreen(menuData * data)
 	return;
 }
 
-static void _menuShowText(menuData * data, int focus, int noShowText,
-			  int allChose)
+static void _ctools_menu_ShowText(menuData * data, int focus, int noShowText, int allChose)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -489,7 +477,7 @@ static void _menuShowText(menuData * data, int focus, int noShowText,
 		if (i <= noShowText) {
 			continue;
 		}
-		data->getFocus(data, i);
+		ctools_menu_GetFocus(data, i);
 		if (i != focus) {
 			attron(COLOR_PAIR(1));
 			attroff(A_BOLD);
@@ -508,8 +496,7 @@ static void _menuShowText(menuData * data, int focus, int noShowText,
 	return;
 }
 
-static void _menuShowDescribe(menuData * data, int focus, int focus2,
-			      int noShowText2, int *allDescribe)
+static void _ctools_menu_ShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int *allDescribe)
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 
@@ -535,7 +522,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2,
 	attroff(COLOR_PAIR(4));
 	attron(COLOR_PAIR(4));
 
-	data->getFocus(data, focus);
+	ctools_menu_GetFocus(data, focus);
 	if (data->focus->describe != NULL) {	/* 倘若描述不为空 */
 		int stat = 0,	/* 仅作临时变量 */
 		    i = 0,	/* 行内字符数/宽度 */
@@ -623,8 +610,7 @@ static void _menuShowDescribe(menuData * data, int focus, int focus2,
 	return;
 }
 
-static void _menuShowHelp(menuData * data, int focus, int noShowText,
-			  int *allHelp)
+static void _ctools_menu_ShowHelp(menuData * data, int focus, int noShowText, int *allHelp)
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 	int i = 0,		/* 行内字符总量 */
@@ -655,7 +641,7 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText,
 	}
 	move(6, 3);
 	do {
-		data->getFocus(data, i3);
+		ctools_menu_GetFocus(data, i3);
 		if (data->focus == NULL) {
 			return;
 		}
@@ -754,8 +740,7 @@ static void _menuShowHelp(menuData * data, int focus, int noShowText,
 	return;
 }
 
-static void _menuShowSitting(menuData * data, int focus, int noShowText,
-			     int allChose)
+static void _ctools_menu_ShowSitting(menuData * data, int focus, int noShowText, int allChose)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -773,7 +758,7 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText,
 		if (i <= noShowText) {
 			continue;
 		}
-		data->getFocus(data, i);
+		ctools_menu_GetFocus(data, i);
 		if (i != focus) {
 			attroff(A_BOLD);
 			attroff(COLOR_PAIR(3));
@@ -803,14 +788,13 @@ static void _menuShowSitting(menuData * data, int focus, int noShowText,
 					 "(*)");
 			}
 		}
-		refresh();
 	}
 	attroff(COLOR_PAIR(1));
 	attroff(COLOR_PAIR(3));
 	return;
 }
 
-static int _menuInput(int *input, int *focus, int *noShowText, int allChose)
+static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allChose)
 {
 	switch (*input) {
 	case 0x1B:

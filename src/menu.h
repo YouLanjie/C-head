@@ -24,31 +24,27 @@ struct Text {
 };                                  /* 条例结构体 */
 
 typedef struct _menuData{
-	char         *       title;                                                                      /* 标题 */
-	struct Text  *       text;                                                                       /* 条例链表头 */
-	struct Text  *       focus;                                                                      /* 选中的条例 */
-	int                  cfg;                                                                        /* 菜单状态 */
-	void        (* const addText)    (struct _menuData * data, ...);                                 /* 添加条例 */
-	void        (* const addTextData)(struct _menuData * data, int type, char * format, ...);        /* 添加条例信息 */
-	void        (* const getFocus)   (struct _menuData * data, int number);                          /* 更改焦点指针 */
-	int         (* const menuShow)   (struct _menuData * data);                                      /* 更改焦点指针 */
-}menuData;                                                                                        /* 菜单类/结构体 */
+	char        * title;    /* 标题 */
+	struct Text * text;     /* 条例链表头 */
+	struct Text * focus;    /* 选中的条例 */
+	int           cfg;      /* 菜单状态 */
+}menuData;                             /* 菜单类/结构体 */
 
 // 函数声明
 // ======================================================================================================================================================
 
-extern menuData menuDataInit();
+extern void ctools_ncurse_init();
+extern void ctools_menu_Init();
+extern void ctools_menu_AddText(menuData * data, ...);
+extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ...);
+extern void ctools_menu_GetFocus(menuData * data, int number);
+extern int  ctools_menu_Show(menuData * data);
 
-static void _menuAddText(menuData * data, ...);
-static void _menuAddTextData(menuData * data, int type, char * format, ...);
-static void _menuGetFocus(menuData * data, int number);
-
-static int  _menu(menuData * data);
-static void _menuShowScreen(menuData * data);
-static void _menuShowText(menuData * data, int focus, int noShowText, int allChose);
-static void _menuShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe);
-static void _menuShowHelp(menuData * data, int focus, int noShowText, int * allHelp);
-static void _menuShowSitting(menuData * data, int focus, int noShowText, int allChose);
-static int  _menuInput(int * input, int * focus, int * noShowText, int allChose);
+static void _ctools_menu_ShowScreen(menuData * data);
+static void _ctools_menu_ShowText(menuData * data, int focus, int noShowText, int allChose);
+static void _ctools_menu_ShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int * allDescribe);
+static void _ctools_menu_ShowHelp(menuData * data, int focus, int noShowText, int * allHelp);
+static void _ctools_menu_ShowSitting(menuData * data, int focus, int noShowText, int allChose);
+static int  _ctools_menu_Input(int * input, int * focus, int * noShowText, int allChose);
 
 #endif
