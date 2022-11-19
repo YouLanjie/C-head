@@ -40,8 +40,8 @@
 	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
 #endif
 /* kbhit */
-extern int kbhit();
-extern int getch_old();
+extern int ctools_kbhit();
+extern int ctools_getch();
 #endif
 
 /* 预定义windows要用到的东西 */
@@ -64,7 +64,7 @@ extern int getch_old();
 #endif
 
 /* kbhit */
-extern int kbhitGetchar();
+extern int ctools_kbhitGetchar();
 
 #endif
 

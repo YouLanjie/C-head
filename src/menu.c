@@ -575,7 +575,7 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 				/* 字符清零 */
 				i = 0;
 				zh = 0;
-				kbhitGetchar();
+				ctools_kbhitGetchar();
 
 				/* 字符指针下移 */
 				if (*ch == '\n' || *ch == '\r') {
@@ -820,7 +820,7 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 {
 	switch (*input) {
 	case 0x1B:
-		if (kbhit() != 0) {
+		if (ctools_kbhit() != 0) {
 			getchar();
 			*input = getchar();
 			switch (*input) {

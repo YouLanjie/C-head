@@ -67,11 +67,11 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 				printf("> %s", text[i - 1 +  list * 4 * (currentPage - 1)]);
 #endif
 			}
-			kbhitGetchar();
+			ctools_kbhitGetchar();
 		}
 		input = getch();
 		if (input == 0x1B) {
-			if (kbhit()) {
+			if (ctools_kbhit()) {
 				getchar();
 				input = getchar();
 				if (input == 'A') {
