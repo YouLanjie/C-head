@@ -88,19 +88,25 @@ struct Text {
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 
-typedef struct _menuData{
-	char         *       title;                                                                      /* 标题 */
-	struct Text  *       text;                                                                       /* 条例链表头 */
-	struct Text  *       focus;                                                                      /* 选中的条例 */
-	int                  cfg;                                                                        /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
-}menuData;                                                                                        /* 菜单类/结构体 */
+typedef struct _ctools_menu_t{
+	char        * title;    /* 标题 */
+	struct Text * text;     /* 条例链表头 */
+	struct Text * focus;    /* 选中的条例 */
+	int           cfg;      /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
+} ctools_menu_t;                /* 菜单类/结构体 */
 
-extern void ctools_ncurse_init();
+/* 初始化ncurse，设置语言、颜色对 */
 extern void ctools_menu_Init();
-extern void ctools_menu_AddText(menuData * data, ...);
-extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ...);
-extern void ctools_menu_GetFocus(menuData * data, int number);
-extern int  ctools_menu_Show(menuData * data);
+/* 初始化变量 */
+extern void ctools_menu_t_init(ctools_menu_t ** tmp);
+/* 添加选项 */
+extern void ctools_menu_AddText(ctools_menu_t * data, ...);
+/* 添加描述信息 */
+extern void ctools_menu_AddTextData(ctools_menu_t * data, int type, char * format, ...);
+/* 移动焦点变量到指定节点 */
+extern void ctools_menu_GetFocus(ctools_menu_t * data, int number);
+/* 显示菜单 */
+extern int  ctools_menu_Show(ctools_menu_t * data);
 
 #define menuType_OnlyMain    1
 #define menuType_Help        2

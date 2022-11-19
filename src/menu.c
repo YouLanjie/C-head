@@ -1,12 +1,13 @@
 #include "include.h"
 #include "menu.h"
 
-// ====================================================================== NewMenu =======================================================================
-// ======================================================================================================================================================
+// ============================== NewMenu ===============================
+// ======================================================================
 
-// 操作函数
-// ======================================================================================================================================================
+// 数据操作函数
+// ======================================================================
 
+// 定义宏
 #define LineH "─"
 #define LineV "│"
 #define LineLU "┌"
@@ -27,8 +28,12 @@
 #define ArrowLf "←"
 #define ArrowRi "→"
 
+/* ctools_menu_Init
+ * 初始化ncurse
+ * 设置语言、颜色对
+ */
 extern void ctools_menu_Init()
-{				/* 初始化结构体 */
+{
 	setlocale(LC_ALL, "");
 	initscr();
 	cbreak();
@@ -48,7 +53,24 @@ extern void ctools_menu_Init()
 	return;
 }
 
-extern void ctools_menu_AddText(menuData * data, ...)
+/* ctools_menu_t_init
+ * 初始化变量
+ */
+extern void ctools_menu_t_init(ctools_menu_t ** tmp)
+{
+	if (*tmp != NULL) {
+		free(*tmp);
+		tmp = NULL;
+	}
+	*tmp = (ctools_menu_t *)malloc(sizeof(ctools_menu_t));
+	(*tmp) -> title = NULL;
+	(*tmp) -> text  = NULL;
+	(*tmp) -> focus = NULL;
+	(*tmp) -> cfg   = 0;
+	return;
+}
+
+extern void ctools_menu_AddText(ctools_menu_t * data, ...)
 {
 	struct Text *pNew, *pTmp;
 	va_list text;
@@ -93,7 +115,7 @@ extern void ctools_menu_AddText(menuData * data, ...)
 	return;
 }
 
-extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ...)
+extern void ctools_menu_AddTextData(ctools_menu_t * data, int type, char * format, ...)
 {				/* type:0 -> describe, 1 -> function */
 	struct Text *pNew;
 	va_list text;
@@ -128,7 +150,7 @@ extern void ctools_menu_AddTextData(menuData * data, int type, char * format, ..
 	return;
 }
 
-extern void ctools_menu_GetFocus(menuData * data, int number)
+extern void ctools_menu_GetFocus(ctools_menu_t * data, int number)
 {
 	if (data->focus == NULL) {
 		data->focus = data->text;
@@ -148,8 +170,8 @@ extern void ctools_menu_GetFocus(menuData * data, int number)
 	return;
 }
 
-// NewMenu
-// ======================================================================================================================================================
+// 数据处理部分
+// ======================================================================
 
 #ifdef __linux
 #define COLS size.ws_col	/* x轴 */
@@ -170,7 +192,7 @@ static int LINES = 24;
 	b=a^b;    \
 	a=a^b;
 
-extern int  ctools_menu_Show(menuData * data)
+extern int  ctools_menu_Show(ctools_menu_t * data)
 {
 	int input = 1,		/* 保存输入 */
 	    focus = 1,		/* 保存焦点选项的数字 */
@@ -390,10 +412,10 @@ extern int  ctools_menu_Show(menuData * data)
 	return 0;
 }
 
-// MenuScreen
-// ======================================================================================================================================================
+// 显示函数
+// ======================================================================
 
-static void _ctools_menu_ShowScreen(menuData * data)
+static void _ctools_menu_ShowScreen(ctools_menu_t * data)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -457,7 +479,7 @@ static void _ctools_menu_ShowScreen(menuData * data)
 	return;
 }
 
-static void _ctools_menu_ShowText(menuData * data, int focus, int noShowText, int allChose)
+static void _ctools_menu_ShowText(ctools_menu_t * data, int focus, int noShowText, int allChose)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -496,7 +518,7 @@ static void _ctools_menu_ShowText(menuData * data, int focus, int noShowText, in
 	return;
 }
 
-static void _ctools_menu_ShowDescribe(menuData * data, int focus, int focus2, int noShowText2, int *allDescribe)
+static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus2, int noShowText2, int *allDescribe)
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 
@@ -610,7 +632,7 @@ static void _ctools_menu_ShowDescribe(menuData * data, int focus, int focus2, in
 	return;
 }
 
-static void _ctools_menu_ShowHelp(menuData * data, int focus, int noShowText, int *allHelp)
+static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowText, int *allHelp)
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 	int i = 0,		/* 行内字符总量 */
@@ -740,7 +762,7 @@ static void _ctools_menu_ShowHelp(menuData * data, int focus, int noShowText, in
 	return;
 }
 
-static void _ctools_menu_ShowSitting(menuData * data, int focus, int noShowText, int allChose)
+static void _ctools_menu_ShowSitting(ctools_menu_t * data, int focus, int noShowText, int allChose)
 {
 #ifdef __linux
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
