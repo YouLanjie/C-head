@@ -338,7 +338,8 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 					*(data->focus->var) = 0;
 				}
 			} else if (data->cfg == 0) {
-				Clear char output[10];	/* 仅用作字符输出 */
+				Clear;
+				char output[10];	/* 仅用作字符输出 */
 				sprintf(output, "%d", focus);
 				return output[0];
 			}
@@ -368,7 +369,8 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 			}
 			break;
 		case '0':	/* 返回字符0 */
-			Clear if (data->cfg == 2) {
+			Clear;
+			if (data->cfg == 2) {
 				ctools_menu_GetFocus(data, 1);
 			}
 			return '0';
@@ -858,7 +860,8 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 				break;
 			}
 		} else {
-			Clear return '0';
+			Clear;
+			return '0';
 		}
 		break;
 	case 'd':
@@ -921,7 +924,8 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 	case 'q':
 	case 'Q':
 	case '0':
-		Clear return '0';
+		Clear;
+		return '0';
 		break;
 	case ' ':
 	case '\n':
@@ -938,7 +942,8 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 		return *input;
 		break;
 	}
-	Clear return 0;
+	Clear;
+	return 0;
 }
 
 #undef Swap

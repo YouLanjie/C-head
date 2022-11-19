@@ -15,7 +15,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 	}
 
 	while (input != 0x30 && input != 0x1B) {
-		Clear2
+		Clear2;
 #ifdef __linux
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 		winSizeCol = size.ws_col;
@@ -115,7 +115,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 				}
 			}
 			else {
-				Clear2
+				Clear2;
 				return 0;
 			}
 		}
@@ -159,17 +159,17 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 			}
 		}
 		else if (input == 'q' || input == 'Q') {
-			Clear
+			Clear;
 			return '0';
 		}
 		else if (input == ' ' || input == '\r' || input == '\n') {
-			Clear2
+			Clear2;
 			char output[10];
 			sprintf(output, "%d", count + 8 * (currentPage - 1));
 			return output[0];
 		}
 		else {
-			Clear2
+			Clear2;
 			return input;
 		}
 	}

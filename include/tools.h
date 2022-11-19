@@ -28,10 +28,13 @@
 #include <locale.h>
 
 #ifndef Clear
-	#define Clear clear();
+	#define Clear clear()
 #endif
 #ifndef Clear2
-	#define Clear2 clear();
+	#define Clear2 printf("\033[2J")
+#endif
+#ifndef Clear3
+	#define Clear3 system("clear")
 #endif
 #ifndef fontColorSet
 	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
@@ -51,10 +54,10 @@ extern int ctools_getch();
 #include <conio.h>
 
 #ifndef Clear
-	#define Clear printf("\033[2J\033[1;1H");
+	#define Clear printf("\033[2J\033[1;1H")
 #endif
 #ifndef Clear2
-	#define Clear2 system("cls");
+	#define Clear2 system("cls")
 #endif
 #ifndef fontColorSet
 	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
