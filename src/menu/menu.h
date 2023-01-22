@@ -2,7 +2,7 @@
 
 #define _MENU_H_
 
-#include "include.h"
+#include "../include.h"
 
 // The new menu function.
 // ======================================================================================================================================================
@@ -23,7 +23,7 @@ struct Text {
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 
-typedef struct _ctools_menu_t{
+typedef struct{
 	char        * title;    /* 标题 */
 	struct Text * text;     /* 条例链表头 */
 	struct Text * focus;    /* 选中的条例 */

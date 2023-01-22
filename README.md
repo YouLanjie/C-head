@@ -15,9 +15,9 @@
 >
 > 而使用动态库与静态库的方法我不再赘述，请自行搜索
 
-## 仓库特色
+## 仓库功能
 
-### 定义了Linux下没有的函数
+### 定义了Linux下标准库没有的函数
 
 - `getch()` 不回显的输入函数，可供实现**等待用户输入，输入后无需回车确认让程序继续并且不显示输入的字符**的功能（返回整数值作为字符值）。
 - `kbhit` 函数，可以判断当且是否有输入（返回整数值，1有，0无）。
@@ -85,21 +85,30 @@ struct Text {
 	int           number;       /* 编号 */
 	int           cfg;          /* 类型：1数值，2开关 */
 	int           foot;         /* 设置的步长 */
+	int           max;          /* 设置的最大值 */
+	int           min;          /* 设置的最小值 */
 	struct Text * nextText;     /* 下一条例（链表） */
 };                                  /* 条例结构体 */
 
-typedef struct _menuData{
-	char         *       title;                                                                      /* 标题 */
-	struct Text  *       text;                                                                       /* 条例链表头 */
-	struct Text  *       focus;                                                                      /* 选中的条例 */
-	int                  cfg;                                                                        /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
-	void        (* const addText)    (struct _menuData * data, ...);                                 /* 添加条例 */
-	void        (* const addTextData)(struct _menuData * data, int type, char * format, ...);        /* 添加条例信息 */
-	void        (* const getFocus)   (struct _menuData * data, int number);                          /* 更改焦点指针 */
-	int         (* const menuShow)   (struct _menuData * data);                                      /* 更改焦点指针 */
-}menuData;                                                                                        /* 菜单类/结构体 */
+typedef struct _ctools_menu_t{
+	char        * title;    /* 标题 */
+	struct Text * text;     /* 条例链表头 */
+	struct Text * focus;    /* 选中的条例 */
+	int           cfg;      /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
+} ctools_menu_t;                /* 菜单类/结构体 */
 
-extern menuData menuDataInit();
+/* 初始化ncurse，设置语言、颜色对 */
+extern void ctools_menu_Init();
+/* 初始化变量 */
+extern void ctools_menu_t_init(ctools_menu_t ** tmp);
+/* 添加选项 */
+extern void ctools_menu_AddText(ctools_menu_t * data, ...);
+/* 添加描述信息 */
+extern void ctools_menu_AddTextData(ctools_menu_t * data, int type, char * format, ...);
+/* 移动焦点变量到指定节点 */
+extern void ctools_menu_GetFocus(ctools_menu_t * data, int number);
+/* 显示菜单 */
+extern int  ctools_menu_Show(ctools_menu_t * data);
 ```
 
 上面是对外公开的所有内容。  
@@ -151,24 +160,27 @@ extern menuData menuDataInit();
 
 int main() {
 	int input;    //用于保存输入的字符
-	menuData data = menuDataInit();    //这里变量名字任意
+	ctools_menu_t * data = NULL;    //这里指针名字任意，但一定要赋值为NULL
+
+	// 初始化指针（申请空间、赋值）
+	ctools_menu_t_init(&data);
 
 	//设置菜单的标题（以前留空会直接挂，现在可以留空）
-	data.title = "这里填写你的标题";
+	data->title = "这里填写你的标题";
 
 	//这里是设置类型，一般不用设置，因为已经初始化了
-	data.cfg   = 0;
+	data->cfg   = 0;
 
-	//一定要先添加选项再添加数据
+	//一定要先添加选项再添加描述
 	//一定要在参数的最后加上NULL作为结束符
-	data.addText(&data, "选项1", "选项2", "选项n", NULL);
+	ctools_menu_AddText(data, "选项1", "选项2", "选项n", NULL);
 
 	//谈及选项数据（条数不能超过选项的条数）
 	//第三个参数是控制字符串，%s的数量不可以超过节点的数量
-	data.addTextData(&data, 0, "%s", "这是一条描述");
+	ctools_menu_AddTextData(data, 0, "%s", "这是一条描述");
 
 	//调用函数显示菜单，并保存返回值
-	input = data.menuShow(&data);
+	input = ctools_menu_Show(data);
 
 	//输入处理等。。。
 	//.........

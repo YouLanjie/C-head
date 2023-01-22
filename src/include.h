@@ -46,6 +46,7 @@
 /* kbhit */
 extern int ctools_kbhit();
 extern int ctools_getch();
+extern int ctools_kbhitGetchar();
 #endif
 
 /* 预定义windows要用到的东西 */
@@ -67,8 +68,47 @@ extern int ctools_getch();
 #endif
 #endif
 
-/* kbhit */
-extern int ctools_kbhitGetchar();
+/*
+ * 通用功能
+ */
+
+/* 存储单行的文本、字符串 */
+struct ctools_char_t_char {
+	int                         pos_x;    /* 列 */
+	int                         ch;
+	struct ctools_char_t_char * next_ch;
+	struct ctools_char_t_char * last_ch;
+};
+
+/* 嵌套存储多行的文本、字符串 */
+struct ctools_char_t_lines {
+	int                          pos_y;    /* LINE */
+	struct ctools_char_t_char  * data;
+	struct ctools_char_t_lines * next_line;
+	struct ctools_char_t_lines * last_line;
+};
+
+typedef struct ctools_char_t_box {
+	struct ctools_char_t_lines * data;
+	struct ctools_char_t_lines * focus_line;
+	struct ctools_char_t_char  * focus_char;
+}ctools_char;
+
+/* 初始化结构体 */
+int ctools_char_init(ctools_char ** chp);
+/* 添加字符 */
+int ctools_char_add_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
+/* 插入字符 */
+int ctools_char_insert_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
+/* 覆盖字符 */
+int ctools_char_replace_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
+/* 移除字符 */
+int ctools_char_del_ch(ctools_char * chp, int pos_y, int pos_x, int pos_y2, int pos_x2);
+/* 移动焦点变量到指定节点 */
+int ctools_char_move(ctools_char * chp, int pos_y, int pos_x);
+
+/* 读取文本文件 */
+int ctools_char_fscanf(ctools_char *chp, FILE * fp, int opt, char end_char);
 
 #endif
 

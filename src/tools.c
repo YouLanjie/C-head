@@ -1,15 +1,17 @@
 #include "include.h"
 
-// ============================= Linux ==================================
-// ======================================================================
-
+/* 
+ * Linux使用
+ */
 #ifdef __linux
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <asm-generic/ioctls.h>
 
-/* 判断有没有输入 */
+/* 
+ * 判断有没有输入
+ */
 extern int ctools_kbhit()
 {
 	struct termios oldt, newt;
@@ -31,7 +33,9 @@ extern int ctools_kbhit()
 	return 0;
 }
 
-/* 不循环输入 */
+/* 
+ * 不循环输入
+ */
 extern int ctools_kbhitGetchar()
 {
 	struct termios oldt, newt;
@@ -53,6 +57,7 @@ extern int ctools_kbhitGetchar()
 	return 0;
 }
 
+/* 利用终端特性做的getch */
 extern int ctools_getch()
 {
 	struct termios tm, tm_old;
@@ -75,14 +80,14 @@ extern int ctools_getch()
 #endif
 
 
-// =============================== Windows ==============================
-// ======================================================================
-
+/* 
+ * Windows要用的
+ */
 #ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
 
-extern int kbhitGetchar()
+extern int ctools_kbhitGetchar()
 {
 	if (kbhit()) {
 		return getch();
@@ -91,4 +96,8 @@ extern int kbhitGetchar()
 	}
 }
 #endif
+
+/*
+ * 通用功能
+ */
 

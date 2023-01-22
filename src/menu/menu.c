@@ -1,4 +1,3 @@
-#include "include.h"
 #include "menu.h"
 
 // ============================== NewMenu ===============================
@@ -551,7 +550,6 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 		int stat = 0,	/* 仅作临时变量 */
 		    i = 0,	/* 行内字符数/宽度 */
 		    i2 = 9,	/* 行数 */
-		    zh = 0,	/* 行内中文字数 */
 		    zhStat = 1;	/* 是否在打印中文 */
 
 		move(8, COLS / 2 + 2);	/* 设置颜色 */
@@ -559,8 +557,9 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 		while (*ch != '\0') {	/* 按字符显示 */
 			/* 格式判断：自动换行、换行 */
 			if (((i >= COLS / 2 - 4 && *ch != '\0' && zhStat == 1)
-			     || (i >= COLS / 2 - 6 && *ch != '\0'
-				 && zhStat == 2)) || *ch == '\n'
+			     ||
+			     (i >= COLS / 2 - 6 && *ch != '\0' && zhStat == 2))
+			    || *ch == '\n'
 			    || *ch == '\r') {
 				/* 换行时恢复原本的颜色 */
 				if (i2 - 8 == focus2) {
@@ -576,7 +575,6 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 
 				/* 字符清零 */
 				i = 0;
-				zh = 0;
 				ctools_kbhitGetchar();
 
 				/* 字符指针下移 */
@@ -591,9 +589,10 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 				stat = 1;
 			}
 
-			if (*ch == '%' && *(ch + 1) == 'z') {	/* 开启或关闭中文打印 */
-				zhStat = 3 - zhStat;
-				ch += 2;
+			if (*ch & 0x80) {    /* 判断中文字符 */
+				zhStat = 2;
+			} else {
+				zhStat = 1;
 			}
 
 			if (*ch == '\0') {
@@ -607,7 +606,6 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 					printw("%c", *ch);
 					ch++;
 					printw("%c", *ch);
-					zh++;
 					i += 2;
 				} else {
 					i++;
@@ -616,13 +614,11 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 				move(i2 - noShowText2 - 1, COLS / 2 + 3);
 				if (zhStat == 2) {
 					ch += 2;
-					zh++;
 					i += 2;
 				} else {
 					i++;
 				}
 			}
-
 			/* 字符指针下移 */
 			ch++;
 
@@ -640,7 +636,6 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 	int i = 0,		/* 行内字符总量 */
 	    i2 = 7,		/* 多少行 */
 	    i3 = 1,		/* 多少条文本 */
-	    zh = 0,		/* 行内中文字数 */
 	    zhStat = 1,		/* 是否在打印中文 */
 	    stat = 1;
 
@@ -689,7 +684,6 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 
 				/* 字符清零 */
 				i = 0;
-				zh = 0;
 
 				/* 字符指针下移 */
 				if (*ch == '\n' || *ch == '\r') {
@@ -705,10 +699,10 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 				stat = 0;
 			}
 
-			if (*ch == '%' && *(ch + 1) == 'z') {	/* 开启或关闭中文打印 */
-				zhStat = 3 - zhStat;
-				ch += 2;
-				continue;
+			if (*ch & 0x80) {    /* 判断中文字符 */
+				zhStat = 2;
+			} else {
+				zhStat = 1;
 			}
 
 			if (*ch == '\0') {
@@ -723,7 +717,6 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 					printw("%c", *ch);
 					ch++;
 					printw("%c", *ch);
-					zh++;
 					i += 2;
 				} else {
 					i++;
@@ -732,7 +725,6 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 				move(i2 - noShowText - 1, 3);
 				if (zhStat == 2) {
 					ch += 2;
-					zh++;
 					i += 2;
 				} else {
 					i++;
