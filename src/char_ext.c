@@ -254,14 +254,17 @@ int ctools_char_move(ctools_char * chp, int pos_y, int pos_x)
 		pos_x = chp->focus_char->pos_x;
 	}
 
+	/* 换行 */
 	while (pos_y > chp->focus_line->pos_y) {    /* 目标行数比目前行数更大 */
 		if (chp->focus_line->next_line == NULL) {    /* 下一行为空 */
 			ctools_add_line;
-			pLast->next_line = chp->focus_line;
+			/* 搭建焦点节点对链表的联系 */
 			chp->focus_line->last_line = pLast;
-			if (chp->focus_line->last_line != NULL) {
-				chp->focus_line->pos_y += chp->focus_line->last_line->pos_y;
-			}
+			chp->focus_line->next_line = pLast->next_line;
+			/* 搭建链表对焦点节点的联系 */
+			chp->focus_line->last_line->next_line = chp->focus_line;    /* 上连下 */
+			/* 设置坐标 */
+			chp->focus_line->pos_y += chp->focus_line->last_line->pos_y;
 		} else {
 			chp->focus_line = chp->focus_line->next_line;
 		}
@@ -275,14 +278,17 @@ int ctools_char_move(ctools_char * chp, int pos_y, int pos_x)
 	pLast  = NULL;
 	pLast2 = chp->focus_char = chp->focus_line->data;
 
+	/* 换列 */
 	while (pos_x > chp->focus_char->pos_x) {    /* 目标列数比目前行数更大 */
 		if (chp->focus_char->next_ch == NULL) {    /* 下一列为空 */
-			ctools_add_line;
-			pLast2->next_ch = chp->focus_char;
+			ctools_add_ch;
+			/* 搭建焦点节点对链表的联系 */
 			chp->focus_char->last_ch = pLast2;
-			if (chp->focus_char->last_ch != NULL) {
-				chp->focus_char->pos_x += chp->focus_char->last_ch->pos_x;
-			}
+			chp->focus_char->next_ch = pLast2->next_ch;
+			/* 搭建链表对焦点节点的联系 */
+			chp->focus_char->last_ch->next_ch = chp->focus_char;    /* 上连下 */
+			/* 设置坐标 */
+			chp->focus_char->pos_x += chp->focus_char->last_ch->pos_x;
 		} else {
 			chp->focus_char = chp->focus_char->next_ch;
 		}
