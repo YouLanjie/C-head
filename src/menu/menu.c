@@ -1,10 +1,11 @@
 #include "menu.h"
 
-// ============================== NewMenu ===============================
-// ======================================================================
-
-// 数据操作函数
-// ======================================================================
+static void _ctools_menu_ShowScreen(ctools_menu_t * data);
+static void _ctools_menu_ShowText(ctools_menu_t * data, int focus, int noShowText, int allChose);
+static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus2, int noShowText2, int * allDescribe);
+static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowText, int * allHelp);
+static void _ctools_menu_ShowSitting(ctools_menu_t * data, int focus, int noShowText, int allChose);
+static int  _ctools_menu_Input(int * input, int * focus, int * noShowText, int allChose);
 
 // 定义宏
 #define LineH "─"
@@ -22,10 +23,12 @@
 #define LineCLD "╰"
 #define LineCRU "╮"
 #define LineCRD "╯"
-#define ArrowOn "↑"
+#define ArrowUp "↑"
 #define ArrowDn "↓"
 #define ArrowLf "←"
 #define ArrowRi "→"
+
+#define Text ctools_menu_t_text
 
 /* ctools_menu_Init
  * 初始化ncurse
@@ -33,22 +36,27 @@
  */
 extern void ctools_menu_Init()
 {
-	setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "zh_CN.UTF8");
 	initscr();
-	cbreak();
-	noecho();
-	curs_set(0);
+	cbreak();    /* 取消行缓冲 */
+	noecho();    /* 不回显 */
+	curs_set(0);    /* 隐藏光标 */
 	if (has_colors() == FALSE) {
 		endwin();
 		exit(-1);
 	}
 	start_color();
 	/* 初始化颜色对 */
-	init_pair(1, COLOR_WHITE, COLOR_BLUE);      /* 蓝底白字 */
-	init_pair(2, COLOR_BLUE, COLOR_WHITE);      /* 白底蓝字 */
-	init_pair(3, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
-	init_pair(4, COLOR_BLACK, COLOR_WHITE);     /* 白底黑字 */
-	init_pair(5, COLOR_WHITE, COLOR_BLACK);     /* 黑底白字 */
+#define C_WHITE_BLUE   252
+#define C_BLUE_WHITE   253
+#define C_WHITE_YELLOW 254
+#define C_BLACK_WHITE  255
+#define C_WHITE_BLACK  256
+	init_pair(C_WHITE_BLUE,   COLOR_WHITE, COLOR_BLUE);      /* 蓝底白字 */
+	init_pair(C_BLUE_WHITE,   COLOR_BLUE,  COLOR_WHITE);     /* 白底蓝字 */
+	init_pair(C_WHITE_YELLOW, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
+	init_pair(C_BLACK_WHITE,  COLOR_BLACK, COLOR_WHITE);     /* 白底黑字 */
+	init_pair(C_WHITE_BLACK,  COLOR_WHITE, COLOR_BLACK);     /* 黑底白字 */
 	return;
 }
 
@@ -85,8 +93,8 @@ extern void ctools_menu_AddText(ctools_menu_t * data, ...)
 	pNew->describe = NULL;
 	pNew->cfg = 0;
 	pNew->foot = 1;
-	//  pNew -> max      = 2147483647;    /* 整型的最大值 */
-	//  pNew -> min      = -2147483648;    /* 整型的最小值 */
+	// pNew -> max      = 2147483647;    /* 整型的最大值 */
+	// pNew -> min      = -2147483648;    /* 整型的最小值 */
 	pNew->max = 10000000;
 	pNew->min = -10000000;
 	pNew->var = NULL;
@@ -101,8 +109,8 @@ extern void ctools_menu_AddText(ctools_menu_t * data, ...)
 		pNew->number = i;
 		pNew->cfg = 0;
 		pNew->foot = 1;
-		//  pNew -> max      = 2147483647;    /* 整型的最大值 */
-		//  pNew -> min      = -2147483648;    /* 整型的最小值 */
+		// pNew -> max      = 2147483647;    /* 整型的最大值 */
+		// pNew -> min      = -2147483648;    /* 整型的最小值 */
 		pNew->max = 10000000;
 		pNew->min = -10000000;
 		pNew->var = NULL;
@@ -169,27 +177,11 @@ extern void ctools_menu_GetFocus(ctools_menu_t * data, int number)
 	return;
 }
 
-// 数据处理部分
-// ======================================================================
-
-#ifdef __linux
-#define COLS size.ws_col	/* x轴 */
-#define LINES size.ws_row	/* y轴 */
-#endif
-
-#ifdef __linux
-/* 定义保存窗口大小的结构体变量 */
-static struct winsize size;
-#else
-static int COLS = 80;
-static int LINES = 24;
-#endif
-
 /* 交换变量的值 */
-#define Swap(a,b) \
-	a = a^b;  \
-	b=a^b;    \
-	a=a^b;
+#define Swap(a,b)				\
+	a = a^b;				\
+	b = a^b;				\
+	a = a^b;
 
 extern int  ctools_menu_Show(ctools_menu_t * data)
 {
@@ -235,14 +227,6 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 	}
 
 	while (input != 0x30 && input != 0x1B) {
-#ifdef __linux
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-		if (COLS == 0 || LINES == 0) {
-			COLS = 80;
-			LINES = 24;
-		}
-#endif
-
 		/* 显示屏幕框架 */
 		_ctools_menu_ShowScreen(data);
 
@@ -272,31 +256,31 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 
 				/* 打印描述的按键提示 */
 				attron(A_DIM);
-				attron(COLOR_PAIR(4));
-				mvaddstr(7, COLS / 4 * 3 - 4, ArrowOn);
-				printw("w k%s", ArrowOn);
+				attron(COLOR_PAIR(C_BLACK_WHITE));
+				mvaddstr(7, COLS / 4 * 3 - 4, ArrowUp);
+				printw("w k%s", ArrowUp);
 				mvaddstr(LINES - 2, COLS / 4 * 3 - 4, ArrowDn);
 				printw("s j%s", ArrowDn);
 
 				move(LINES - 2, COLS - 7);
 				printw("%02d/%02d", focus, allChose);
 
-				attroff(COLOR_PAIR(4));
+				attroff(COLOR_PAIR(C_BLACK_WHITE));
 				attroff(A_DIM);
 				attron(A_BOLD);
-				attron(COLOR_PAIR(1));
+				attron(COLOR_PAIR(C_WHITE_BLUE));
 
 				mvaddstr(5, COLS / 2, ArrowLf);
 				printw("TAB");
 
 				attroff(A_BOLD);
-				attroff(COLOR_PAIR(1));
+				attroff(COLOR_PAIR(C_WHITE_BLUE));
 			} else {
 				/* 打印选项的按键提示 */
 				attron(A_BOLD);
-				attron(COLOR_PAIR(1));
-				mvaddstr(7, COLS / 4 - 4, ArrowOn);
-				printw("w k%s", ArrowOn);
+				attron(COLOR_PAIR(C_WHITE_BLUE));
+				mvaddstr(7, COLS / 4 - 4, ArrowUp);
+				printw("w k%s", ArrowUp);
 				mvaddstr(LINES - 2, COLS / 4 - 4, ArrowDn);
 				printw("s j%s", ArrowDn);
 
@@ -308,21 +292,20 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 					printw("TAB%s", ArrowRi);
 				}
 				attroff(A_BOLD);
-				attroff(COLOR_PAIR(1));
+				attroff(COLOR_PAIR(C_WHITE_BLUE));
 			}
-		} else {
+		} else {    /* 帮助类型限定 */
 			/* 打印描述的按键提示 */
-			attron(COLOR_PAIR(4));
-			mvaddstr(5, COLS / 2 - 4, ArrowOn);
-			printw("w k%s", ArrowOn);
+			attron(COLOR_PAIR(C_BLACK_WHITE));
+			mvaddstr(5, COLS / 2 - 4, ArrowUp);
+			printw("w k%s", ArrowUp);
 			mvaddstr(LINES - 2, COLS / 2 - 4, ArrowDn);
 			printw("s j%s", ArrowDn);
 
 			move(LINES - 2, COLS - 7);
 			printw("%02d/%02d", focus, allChose);
 
-			attroff(COLOR_PAIR(4));
-			LINES = LINES + 2;
+			attroff(COLOR_PAIR(C_BLACK_WHITE));
 		}
 		refresh();
 		input = getch();
@@ -406,8 +389,6 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 				Swap(allChose, allDescribe);
 				Swap(noShowText, noShowText2);
 			}
-		} else {
-			LINES = LINES - 2;
 		}
 	}
 	return 0;
@@ -418,28 +399,18 @@ extern int  ctools_menu_Show(ctools_menu_t * data)
 
 static void _ctools_menu_ShowScreen(ctools_menu_t * data)
 {
-#ifdef __linux
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (COLS == 0 || LINES == 0) {
-		COLS = 80;
-		LINES = 24;
-	}
-#endif
-
 	if (data == NULL) {
 		return;
 	}
 	//铺上底色
-	attron(COLOR_PAIR(1));
+	attron(COLOR_PAIR(C_WHITE_BLUE));
 	for (int i = 0; i < LINES; i++) {
 		for (int i2 = 0; i2 < COLS; i2++) {
 			mvaddch(i, i2, ' ');
 		}
 	}
-	move(0, 0);
-	printw(LineLU);
+	box(stdscr, 0, 0);
 	for (int i = 1; i < COLS; i++) {
-		mvaddstr(0, i, LineH);	/* 第一横线 */
 		mvaddstr(4, i, LineH);	/* 第二横线 */
 		mvaddstr(LINES - 1, i, LineH);	/* 第三横线 */
 		if (data->cfg == 0 || data->cfg == 3) {
@@ -475,37 +446,32 @@ static void _ctools_menu_ShowScreen(ctools_menu_t * data)
 			 data->title);
 		attroff(A_BOLD);
 	}
-	attroff(COLOR_PAIR(1));
+	attroff(COLOR_PAIR(C_WHITE_BLUE));
 
 	return;
 }
 
 static void _ctools_menu_ShowText(ctools_menu_t * data, int focus, int noShowText, int allChose)
 {
-#ifdef __linux
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (COLS == 0 || LINES == 0) {
-		COLS = 80;
-		LINES = 24;
-	}
-#endif
-
 	if (data == NULL) {
 		return;
 	}
 	for (int i = 1;
-	     data->text != NULL && data->focus != NULL
-	     && i - noShowText <= allChose && i - noShowText <= LINES - 10;
-	     i++) {
+	     data->text != NULL &&
+	     data->focus != NULL &&
+	     i - noShowText <= allChose &&
+	     i - noShowText <= LINES - 10;
+	     i++
+	     ) {
 		if (i <= noShowText) {
 			continue;
 		}
 		ctools_menu_GetFocus(data, i);
 		if (i != focus) {
-			attron(COLOR_PAIR(1));
+			attron(COLOR_PAIR(C_WHITE_BLUE));
 			attroff(A_BOLD);
 		} else {
-			attron(COLOR_PAIR(3));
+			attron(COLOR_PAIR(C_WHITE_YELLOW));
 			attron(A_BOLD);
 		}
 		move(i + 7 - noShowText, 3);
@@ -513,8 +479,8 @@ static void _ctools_menu_ShowText(ctools_menu_t * data, int focus, int noShowTex
 			printw(" ");
 		}
 		mvaddstr(i + 7 - noShowText, 3, data->focus->text);
-		attroff(COLOR_PAIR(2));
-		attroff(COLOR_PAIR(3));
+		attroff(COLOR_PAIR(C_BLUE_WHITE));
+		attroff(COLOR_PAIR(C_WHITE_YELLOW));
 	}
 	return;
 }
@@ -523,27 +489,19 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 
-#ifdef __linux
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (COLS == 0 || LINES == 0) {
-		COLS = 80;
-		LINES = 24;
-	}
-#endif
-
 	if (data == NULL) {
 		return;
 	}
 	/* 打底色 */
-	attron(COLOR_PAIR(4));
+	attron(COLOR_PAIR(C_BLACK_WHITE));
 	for (int i = 8; i <= LINES - 1; i++) {
 		move(i - 1, COLS / 2 + 1);
 		for (int i2 = COLS / 2 + 2; i2 <= COLS - 2; i2++) {
 			printw(" ");
 		}
 	}
-	attroff(COLOR_PAIR(4));
-	attron(COLOR_PAIR(4));
+	attroff(COLOR_PAIR(C_BLACK_WHITE));
+	attron(COLOR_PAIR(C_BLACK_WHITE));
 
 	ctools_menu_GetFocus(data, focus);
 	if (data->focus->describe != NULL) {	/* 倘若描述不为空 */
@@ -563,8 +521,8 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 			    || *ch == '\r') {
 				/* 换行时恢复原本的颜色 */
 				if (i2 - 8 == focus2) {
-					attroff(COLOR_PAIR(5));
-					attron(COLOR_PAIR(4));
+					attroff(COLOR_PAIR(C_WHITE_BLACK));
+					attron(COLOR_PAIR(C_BLACK_WHITE));
 				}
 
 				/* 行数增加 */
@@ -584,8 +542,8 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 			}
 
 			if (i2 - 8 == focus2 && !stat) {	/* 用作高亮选中项 */
-				attroff(COLOR_PAIR(4));
-				attron(COLOR_PAIR(5));
+				attroff(COLOR_PAIR(C_BLACK_WHITE));
+				attron(COLOR_PAIR(C_WHITE_BLACK));
 				stat = 1;
 			}
 
@@ -625,8 +583,8 @@ static void _ctools_menu_ShowDescribe(ctools_menu_t * data, int focus, int focus
 		}
 		*allDescribe = i2 - 8;
 	}
-	attroff(COLOR_PAIR(4));
-	attroff(COLOR_PAIR(5));
+	attroff(COLOR_PAIR(C_BLACK_WHITE));
+	attroff(COLOR_PAIR(C_WHITE_BLACK));
 	return;
 }
 
@@ -639,19 +597,11 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 	    zhStat = 1,		/* 是否在打印中文 */
 	    stat = 1;
 
-#ifdef __linux
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (COLS == 0 || LINES == 0) {
-		COLS = 80;
-		LINES = 24;
-	}
-#endif
-
 	if (data == NULL || data->text == NULL) {
 		return;
 	}
 	/* 打底色 */
-	attron(COLOR_PAIR(4));
+	attron(COLOR_PAIR(C_BLACK_WHITE));
 	for (int i = 6; i <= LINES - 1; i++) {
 		move(i - 1, 2);
 		for (int i2 = 2; i2 <= COLS - 3; i2++) {
@@ -672,8 +622,8 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 			    || *ch == '\n' || *ch == '\r') {
 				/* 换行时恢复原本的颜色 */
 				if (i2 - 6 == focus) {
-					attroff(COLOR_PAIR(5));
-					attron(COLOR_PAIR(4));
+					attroff(COLOR_PAIR(C_WHITE_BLACK));
+					attron(COLOR_PAIR(C_BLACK_WHITE));
 				}
 
 				/* 行数增加 */
@@ -694,8 +644,8 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 
 			/* 用作高亮选中项 */
 			if (i2 - 6 == focus && stat == 1) {
-				attroff(COLOR_PAIR(4));
-				attron(COLOR_PAIR(5));
+				attroff(COLOR_PAIR(C_BLACK_WHITE));
+				attron(COLOR_PAIR(C_WHITE_BLACK));
 				stat = 0;
 			}
 
@@ -737,8 +687,8 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 		i3++;
 		/* 换行时恢复原本的颜色 */
 		if (i2 - 6 == focus) {
-			attroff(COLOR_PAIR(5));
-			attron(COLOR_PAIR(4));
+			attroff(COLOR_PAIR(C_WHITE_BLACK));
+			attron(COLOR_PAIR(C_BLACK_WHITE));
 		}
 
 		/* 行数增加 */
@@ -751,21 +701,13 @@ static void _ctools_menu_ShowHelp(ctools_menu_t * data, int focus, int noShowTex
 		i = 0;
 	} while (data->focus->nextText != NULL);
 	*allHelp = i2 - 7;
-	attroff(COLOR_PAIR(4));
-	attroff(COLOR_PAIR(5));
+	attroff(COLOR_PAIR(C_BLACK_WHITE));
+	attroff(COLOR_PAIR(C_WHITE_BLACK));
 	return;
 }
 
 static void _ctools_menu_ShowSitting(ctools_menu_t * data, int focus, int noShowText, int allChose)
 {
-#ifdef __linux
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	if (COLS == 0 || LINES == 0) {
-		COLS = 80;
-		LINES = 24;
-	}
-#endif
-
 	if (data == NULL || data->text == NULL) {
 		return;
 	}
@@ -777,11 +719,11 @@ static void _ctools_menu_ShowSitting(ctools_menu_t * data, int focus, int noShow
 		ctools_menu_GetFocus(data, i);
 		if (i != focus) {
 			attroff(A_BOLD);
-			attroff(COLOR_PAIR(3));
-			attron(COLOR_PAIR(1));
+			attroff(COLOR_PAIR(C_WHITE_YELLOW));
+			attron(COLOR_PAIR(C_WHITE_BLUE));
 		} else {
-			attroff(COLOR_PAIR(1));
-			attron(COLOR_PAIR(3));
+			attroff(COLOR_PAIR(C_WHITE_BLUE));
+			attron(COLOR_PAIR(C_WHITE_YELLOW));
 			attron(A_BOLD);
 		}
 		move(i + 7 - noShowText, 3);
@@ -805,8 +747,8 @@ static void _ctools_menu_ShowSitting(ctools_menu_t * data, int focus, int noShow
 			}
 		}
 	}
-	attroff(COLOR_PAIR(1));
-	attroff(COLOR_PAIR(3));
+	attroff(COLOR_PAIR(C_WHITE_BLUE));
+	attroff(COLOR_PAIR(C_WHITE_YELLOW));
 	return;
 }
 
@@ -943,6 +885,14 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 #undef winSizeCol
 #undef winSizeRol
 
+#undef C_WHITE_BLUE
+#undef C_BLUE_WHITE
+#undef C_WHITE_YELLOW
+#undef C_BLACK_WHITE
+#undef C_WHITE_BLACK
+
+#undef Text
+
 #undef LineH
 #undef LineV
 #undef LineLU
@@ -958,5 +908,5 @@ static int _ctools_menu_Input(int *input, int *focus, int *noShowText, int allCh
 #undef LineCLD
 #undef LineCRU
 #undef LineCRD
-#undef ArrowOn
+#undef ArrowUp
 #undef ArrowDn
