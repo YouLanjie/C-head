@@ -69,8 +69,28 @@ extern int ctools_kbhitGetchar();
 #endif
 
 /*
- * 通用功能
+ * 命令行操作
  */
+union Arg;
+typedef struct Cmd {
+	char const  *const name;
+	char const  *const describe;
+	int        (*const v)(union Arg);
+	struct Cmd  *const next;
+} Cmd;
+
+typedef struct Key {
+	char        *name;
+	char        *cmd_name;
+	/* char         key; */
+	/* int        (*v); */
+	struct Key  *next;
+} Key;
+
+int run_cmd(char command[1024]);
+int cmd_input(char *cmd);
+
+extern Cmd *Cmd_list;
 
 /* 存储单行的文本、字符串 */
 struct ctools_char_t_char {

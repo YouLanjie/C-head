@@ -151,6 +151,30 @@ extern int  ctools_menu_Show(ctools_menu_t * data);
 #define ctools_menu_TextDataSetMax   4
 #define ctools_menu_TextDataSetMin   5
 
+/*
+ * 命令行操作
+ */
+union Arg;
+typedef struct Cmd {
+	char const  *const name;
+	char const  *const describe;
+	int        (*const v)(union Arg);
+	struct Cmd  *const next;
+} Cmd;
+
+typedef struct Key {
+	char        *name;
+	char        *cmd_name;
+	/* char         key; */
+	/* int        (*v); */
+	struct Key  *next;
+} Key;
+
+int run_cmd(char command[1024]);
+int cmd_input(char *cmd);
+
+extern Cmd *Cmd_list;
+
 /* 
  * 字符串扩展操作
  */
