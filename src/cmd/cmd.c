@@ -135,6 +135,7 @@ static Arg quit(void)
 Arg cmd_run(char command[CMD_MAX_LEN])
 {
 	int   stat = 0;
+	char  cmd[CMD_MAX_LEN]  = "\0";
 	char  arg[ARG_MAX_LEN]  = "\0";
 	Arg   result = {.num = 0};
 
@@ -142,7 +143,8 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 	for (int i = 0; command[i] != '\0'; ++i) {
 		if (stat) {
 			arg[i - stat] = command[i];
-			command[i - 1] = '\0';
+		} else {
+			cmd[i] = command[i];
 		}
 		/* 分隔符判定 */
 		if (!stat && command[i] == ' ') {
@@ -151,7 +153,7 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 	}
 	Cmd * tmp = Cmd_List;
 	while (tmp != NULL) {
-		if (strcmp(command, tmp->name) == 0) {
+		if (strcmp(cmd, tmp->name) == 0) {
 			/* printf("%s  --  %s\n", tmp->name, tmp->describe); */
 			if (tmp->v != NULL) {
 				Arg ARG = {.ch = arg};
@@ -164,7 +166,7 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 	if (tmp == NULL && Cmd_list != NULL) {
 		tmp = Cmd_list;
 		while (tmp != NULL) {
-			if (strcmp(command, tmp->name) == 0) {
+			if (strcmp(cmd, tmp->name) == 0) {
 				/* printf("%s  --  %s\n", tmp->name, tmp->describe); */
 				if (tmp->v != NULL) {
 					Arg ARG = {.ch = arg};
