@@ -143,7 +143,7 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 	for (int i = 0; command[i] != '\0'; ++i) {
 		if (stat) {
 			arg[i - stat] = command[i];
-		} else {
+		} else if (command[i] != ' ') {
 			cmd[i] = command[i];
 		}
 		/* 分隔符判定 */
