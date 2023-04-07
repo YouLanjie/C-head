@@ -446,7 +446,7 @@ static Arg cread(Arg type)
 	}
 
 	char cmd[CMD_MAX_LEN] = "\0";
-	char cmd2[CMD_MAX_LEN] = "\0";
+	char cmd2[CMD_MAX_LEN + 4] = "\0";
 	while (fgets(cmd, CMD_MAX_LEN, fp) != NULL) {
 		sprintf(cmd2, "set %s", cmd);
 		cmd_run(cmd2);
