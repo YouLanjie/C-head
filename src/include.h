@@ -140,9 +140,14 @@ typedef struct Key {
 	struct Key  *next;
 } Key;
 
+/* 设置命令列表 */
 extern int cmd_list_set(Cmd *list);
-extern Arg run_cmd(char command[CMD_MAX_LEN]);
+/* 提供一种输入方式 */
 extern int cmd_input(char *cmd);
+/* 运行命令（面向客户使用） */
+extern Arg cmd_run(char command[CMD_MAX_LEN]);
+/* 运行默认提供的tui交互界面 */
+extern int cmd_tui(void);
 
 extern Cmd *Cmd_list;
 
