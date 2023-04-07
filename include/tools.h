@@ -154,11 +154,25 @@ extern int  ctools_menu_Show(ctools_menu_t * data);
 /*
  * 命令行操作
  */
-union Arg;
+#define CMD_MAX_LEN 1024
+#define ARG_MAX_LEN 1024
+
+typedef struct Opt {
+	char       *name;
+	char       *data;
+	struct Opt *next;
+} Opt;
+
+typedef union Arg {
+        char  *ch;
+	char **chp;
+	int    num;
+} Arg;
+
 typedef struct Cmd {
 	char const  *const name;
 	char const  *const describe;
-	int        (*const v)(union Arg);
+	Arg        (*const v)(Arg);
 	struct Cmd  *const next;
 } Cmd;
 
@@ -170,8 +184,14 @@ typedef struct Key {
 	struct Key  *next;
 } Key;
 
-int run_cmd(char command[1024]);
-int cmd_input(char *cmd);
+/* 设置命令列表 */
+extern int cmd_list_set(Cmd *list);
+/* 提供一种输入方式 */
+extern int cmd_input(char *cmd);
+/* 运行命令（面向客户使用） */
+extern Arg cmd_run(char command[CMD_MAX_LEN]);
+/* 运行默认提供的tui交互界面 */
+extern int cmd_tui(void);
 
 extern Cmd *Cmd_list;
 
