@@ -9,7 +9,7 @@
  */
 
 
-#include "../include.h"
+#include "./include.h"
 
 static Arg help();
 static Arg quit();
@@ -196,12 +196,7 @@ int cmd_input(char *cmd)
 		input = ctools_getch();
 		switch (input) {
 		case 0x7f: {
-			if (num == 0) {
-				char const *wrong = "Oh no, something is wrong :(";
-				strcpy(cmd, wrong);
-				num = strlen(wrong);
-				printf("\033[1;31m%s\033[0m", cmd);
-			} else {
+			if (num != 0) {
 				num--;
 				cmd[num] = '\0';
 				printf("\b \b");

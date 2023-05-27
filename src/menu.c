@@ -52,6 +52,7 @@ extern void ctools_menu_Init()
 #define C_WHITE_YELLOW 254
 #define C_BLACK_WHITE  255
 #define C_WHITE_BLACK  256
+	/*       颜色对           字色（表）   底色（背景） */
 	init_pair(C_WHITE_BLUE,   COLOR_WHITE, COLOR_BLUE);      /* 蓝底白字 */
 	init_pair(C_BLUE_WHITE,   COLOR_BLUE,  COLOR_WHITE);     /* 白底蓝字 */
 	init_pair(C_WHITE_YELLOW, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
@@ -67,7 +68,7 @@ extern void ctools_menu_t_init(ctools_menu_t ** tmp)
 {
 	if (*tmp != NULL) {
 		free(*tmp);
-		tmp = NULL;
+		*tmp = NULL;
 	}
 	*tmp = (ctools_menu_t *)malloc(sizeof(ctools_menu_t));
 	(*tmp) -> title = NULL;
