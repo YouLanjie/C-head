@@ -199,8 +199,17 @@ int cmd_input(char *cmd)
 		case 0x7f: {
 			if (num != 0) {
 				num--;
-				cmd[num] = '\0';
-				printf("\b \b");
+				if(cmd[num] & 0x80) {
+					cmd[num] = '\0';
+					num--;
+					cmd[num] = '\0';
+					num--;
+					cmd[num] = '\0';
+					printf("\b\b  \b\b");
+				} else {
+					cmd[num] = '\0';
+					printf("\b \b");
+				}
 			}
 			break;
 		}
