@@ -87,8 +87,9 @@ int cmd_tui(void)
 		int stat = cmd_run(name).num;
 		/* 判断报错 */
 		if (stat == -1) {
-			printf("Someting is wrong.  --  \033[1;31m:(\033[0m\n"
-			       "Try input `help`\n");
+			printf("Command not found: %s\n"
+			       "Someting is wrong.  --  \033[1;31m:(\033[0m\n"
+			       "Try input `help`\n", name);
 		}
 	}
 	return 0;
