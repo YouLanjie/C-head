@@ -111,20 +111,13 @@ typedef struct {
 	void (*const set_title)(struct ctools_menu_t*, char*);
 	void (*const set_type)(struct ctools_menu_t*, char*);
 	void (*const add_text)(struct ctools_menu_t*, ...);
-	void (*const add_text_data)(struct ctools_menu_t*, int, char*, ...);
+	void (*const add_text_data)(struct ctools_menu_t*, char*, char*, ...);
 	int  (*const show)(struct ctools_menu_t*);
 } ctools_menu;
 /* use by `CT_MENU` */
 
 #define ctools_menu_TextTypeNumber   1
 #define ctools_menu_TextTypeButton   1
-
-#define ctools_menu_TextDataDescribe 0
-#define ctools_menu_TextDataSetType  1
-#define ctools_menu_TextDataSetVar   2
-#define ctools_menu_TextDataSetFoot  3
-#define ctools_menu_TextDataSetMax   4
-#define ctools_menu_TextDataSetMin   5
 
 /*
  * 命令行操作
