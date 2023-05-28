@@ -56,10 +56,6 @@ static void ncurses_init()
  */
 static void data_init(Data ** tmp)
 {
-	if (*tmp != NULL) {
-		free(*tmp);
-		*tmp = NULL;
-	}
 	*tmp = (Data *)malloc(sizeof(Data));
 	(*tmp) -> title = NULL;
 	(*tmp) -> text  = NULL;
