@@ -26,7 +26,7 @@ static int cmd_list_set(ctools_cmd_list*);
 /* 提供一种输入方式 */
 static int cmd_input(char*);
 /* 运行命令（面向客户使用） */
-static Arg cmd_run(char[]);
+static Arg cmd_run(char command[CMD_MAX_LEN]);
 /* 运行默认提供的tui交互界面 */
 static int cmd_tui(void);
 const ctools_cmd CT_CMD = {
