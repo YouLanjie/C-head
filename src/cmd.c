@@ -11,6 +11,33 @@
 
 #include "./include.h"
 
+#define CMD_MAX_LEN 1024
+#define ARG_MAX_LEN 1024
+
+typedef union ctools_cmd_arg Arg;
+typedef struct Opt {
+	char       *name;
+	char       *data;
+	struct Opt *next;
+} Opt;
+
+/* 设置命令列表 */
+static int cmd_list_set(ctools_cmd_list*);
+/* 提供一种输入方式 */
+static int cmd_input(char*);
+/* 运行命令（面向客户使用） */
+static Arg cmd_run(char[]);
+/* 运行默认提供的tui交互界面 */
+static int cmd_tui(void);
+const ctools_cmd CT_CMD = {
+	.cmd_list_set = cmd_list_set,
+	.input        = cmd_input,
+	.run          = cmd_run,
+	.ui           = cmd_tui,
+	.cmd_max_len  = CMD_MAX_LEN,
+	.arg_max_len  = ARG_MAX_LEN,
+};
+
 static Arg help();
 static Arg quit();
 
@@ -22,7 +49,7 @@ static Arg csave(Arg type);
 static Arg cread(Arg type);
 
 /* 默认命令列表 */
-static Cmd Cmd_List[] = {
+static ctools_cmd_list Cmd_List[] = {
 	{"help",  "获得帮助", help,  &Cmd_List[1]},
 	{"exit",  "离开程序", quit,  &Cmd_List[2]},
 	{"quit",  "离开程序", quit,  &Cmd_List[3]},
@@ -35,7 +62,7 @@ static Cmd Cmd_List[] = {
 	{"\0",    "空行",     NULL,  NULL}
 };
 
-Cmd *Cmd_list = NULL;
+ctools_cmd_list *Cmd_list = NULL;
 
 /* 起个头 */
 static Opt Opt_header[] = {
@@ -45,7 +72,7 @@ static Opt Opt_header[] = {
 /*
  * 设置额外的命令列表
  */
-int cmd_list_set(Cmd *list)
+static int cmd_list_set(ctools_cmd_list *list)
 {
 	Cmd_list = list;
 	return 0;
@@ -54,7 +81,7 @@ int cmd_list_set(Cmd *list)
 /*
  * 运行默认提供的TUI交互界面
  */
-int cmd_tui(void)
+static int cmd_tui(void)
 {
 	char name[CMD_MAX_LEN] = "\0";
 	Arg arg = {.ch = NULL};
@@ -100,7 +127,7 @@ int cmd_tui(void)
  */
 static Arg help(void)
 {
-	struct Cmd *
+	ctools_cmd_list *
 		tmp = Cmd_List;
 
 	printf("\033[1;33mCommand list:\033[0m\n");
@@ -133,7 +160,7 @@ static Arg quit(void)
 /*
  * 解析传入字符串查找并运行命令
  */
-Arg cmd_run(char command[CMD_MAX_LEN])
+static Arg cmd_run(char command[CMD_MAX_LEN])
 {
 	int   stat = 0;
 	char  cmd[CMD_MAX_LEN]  = "\0";
@@ -152,7 +179,7 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 			stat = i + 1;
 		}
 	}
-	Cmd * tmp = Cmd_List;
+	ctools_cmd_list * tmp = Cmd_List;
 	while (tmp != NULL) {
 		if (strcmp(cmd, tmp->name) == 0) {
 			/* printf("%s  --  %s\n", tmp->name, tmp->describe); */
@@ -188,7 +215,7 @@ Arg cmd_run(char command[CMD_MAX_LEN])
 /*
  * 获取输入
  */
-int cmd_input(char *cmd)
+static int cmd_input(char *cmd)
 {
 	int     input = 0,
 		num   = 0;
@@ -246,7 +273,7 @@ int cmd_input(char *cmd)
 /*
  * 设置值
  */
-Arg set(Arg format)
+static Arg set(Arg format)
 {
 	char *ch = format.ch;
 	char name[CMD_MAX_LEN] = "\0";
@@ -319,7 +346,7 @@ Arg set(Arg format)
 /*
  * 打印值
  */
-Arg print(Arg format)
+static Arg print(Arg format)
 {
 	struct Opt *p = Opt_header;
 	if (p == NULL) {
@@ -346,7 +373,7 @@ Arg print(Arg format)
 /*
  * 获取变量
  */
-Arg get(Arg result)
+static Arg get(Arg result)
 {
 	struct Opt *p = Opt_header;
 	if (p == NULL) {
@@ -372,7 +399,7 @@ Arg get(Arg result)
 /*
  * 列出所有的变量列表
  */
-Arg list(Arg type)
+static Arg list(Arg type)
 {
 	struct Opt *p = Opt_header;
 

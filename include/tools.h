@@ -101,10 +101,7 @@ extern void Menu3(char title[]);
 /* 
  * 新菜单
  */
-
-struct ctools_menu_t;
-
-/* struct ctools_menu_t;                /\* 菜单类/结构体 *\/ */
+struct ctools_menu_t;    /* 菜单类/结构体 */
 typedef struct {
 	void (*const ncurses_init)();
 	void (*const data_init)(struct ctools_menu_t**);
@@ -114,94 +111,39 @@ typedef struct {
 	void (*const add_text_data)(struct ctools_menu_t*, char*, char*, ...);
 	int  (*const show)(struct ctools_menu_t*);
 } ctools_menu;
+extern const ctools_menu CT_MENU;
 /* use by `CT_MENU` */
 
 #define ctools_menu_TextTypeNumber   1
-#define ctools_menu_TextTypeButton   1
+#define ctools_menu_TextTypeButton   2
 
 /*
  * 命令行操作
  */
-#define CMD_MAX_LEN 1024
-#define ARG_MAX_LEN 1024
-
-typedef struct Opt {
-	char       *name;
-	char       *data;
-	struct Opt *next;
-} Opt;
-
-typedef union Arg {
+union ctools_cmd_arg {
         char  *ch;
 	char **chp;
 	int    num;
-} Arg;
-
-typedef struct Cmd {
-	char const  *const name;
-	char const  *const describe;
-	Arg        (*const v)(Arg);
-	struct Cmd  *const next;
-} Cmd;
-
-typedef struct Key {
-	char        *name;
-	char        *cmd_name;
-	/* char         key; */
-	/* int        (*v); */
-	struct Key  *next;
-} Key;
-
-/* 设置命令列表 */
-extern int cmd_list_set(Cmd *list);
-/* 提供一种输入方式 */
-extern int cmd_input(char *cmd);
-/* 运行命令（面向客户使用） */
-extern Arg cmd_run(char command[CMD_MAX_LEN]);
-/* 运行默认提供的tui交互界面 */
-extern int cmd_tui(void);
-
-extern Cmd *Cmd_list;
-
-/* 
- * 字符串扩展操作
- */
-/* 存储单行的文本、字符串 */
-struct ctools_char_t_char {
-	int                         pos_x;    /* 列 */
-	int                         ch;
-	struct ctools_char_t_char * next_ch;
-	struct ctools_char_t_char * last_ch;
 };
 
-/* 嵌套存储多行的文本、字符串 */
-struct ctools_char_t_lines {
-	int                          pos_y;    /* LINE */
-	struct ctools_char_t_char  * data;
-	struct ctools_char_t_lines * next_line;
-	struct ctools_char_t_lines * last_line;
-};
+typedef struct ctools_cmd {
+	char const            *const name;
+	char const            *const describe;
+	union ctools_cmd_arg (*const v)(union ctools_cmd_arg);
+	struct ctools_cmd     *const next;
+} ctools_cmd_list;
+extern ctools_cmd_list *Cmd_list;
 
-/* 存储访问接口 */
-typedef struct ctools_char_t_box {
-	struct ctools_char_t_lines * data;
-	struct ctools_char_t_lines * focus_line;
-	struct ctools_char_t_char  * focus_char;
-}ctools_char;
-/* 初始化结构体 */
-int ctools_char_init(ctools_char ** chp);
-/* 添加字符 */
-int ctools_char_add_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
-/* 插入字符 */
-int ctools_char_insert_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
-/* 覆盖字符 */
-int ctools_char_replace_ch(ctools_char * chp, int pos_y, int pos_x, char * ch);
-/* 移除字符 */
-int ctools_char_del_ch(ctools_char * chp, int pos_y, int pos_x, int pos_y2, int pos_x2);
-/* 移动焦点变量到指定节点 */
-int ctools_char_move(ctools_char * chp, int pos_y, int pos_x);
-/* 读取文本文件到该结构体 */
-int ctools_char_fscanf(ctools_char *chp, FILE * fp, int opt, char end_char);
+typedef struct {
+	int                  (*const cmd_list_set)(ctools_cmd_list*);
+	int                  (*const input)(char*);
+	union ctools_cmd_arg (*const run)(char[]);
+	int                  (*const ui)(void);
+	int                    const cmd_max_len;
+	int                    const arg_max_len;
+} ctools_cmd;
+extern const ctools_cmd CT_CMD;
+/* use by `CT_CMD` */
 
 #endif
 

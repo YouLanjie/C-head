@@ -15,7 +15,7 @@ static int Input(int*, int*, int*, int, int);
 
 extern struct display display;
 
-ctools_menu CT_MENU = {
+const ctools_menu CT_MENU = {
 	.ncurses_init  = ncurses_init,
 	.data_init     = data_init,
 	.set_title     = set_title,
