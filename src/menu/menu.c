@@ -237,7 +237,7 @@ static int Show(Data * data)
 				else
 					*(data->focus->var) = 0;
 			} else if (data->cfg == 0) {
-				Clear;
+				clear();
 				char output[10];	/* 仅用作字符输出 */
 				sprintf(output, "%d", focus_text);
 				return output[0];
@@ -264,7 +264,7 @@ static int Show(Data * data)
 			}
 			break;
 		case '0':	/* 返回字符0 */
-			Clear;
+			clear();
 			if (data->cfg == 2)
 				get_focus(data, 1);
 			return '0';
@@ -311,7 +311,7 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 				break;
 			}
 		} else {
-			Clear;
+			clear();
 			return '0';
 		}
 		break;
@@ -369,7 +369,7 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 	case 'q':
 	case 'Q':
 	case '0':
-		Clear;
+		clear();
 		return '0';
 		break;
 	case ' ':
@@ -387,7 +387,7 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 		return *input;
 		break;
 	}
-	Clear;
+	clear();
 	return 0;
 }
 

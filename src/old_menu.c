@@ -1,6 +1,7 @@
 #include "include.h"
 
-int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程序 */
+int ctools_old_menu(char *title, char *text[], int tl, int list)
+{ /* 菜单程序 */
 #ifdef __linux
 	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -15,7 +16,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 	}
 
 	while (input != 0x30 && input != 0x1B) {
-		Clear2;
+		Clear_TER;
 #ifdef __linux
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 		winSizeCol = size.ws_col;
@@ -24,30 +25,30 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 #ifdef __linux
 		printf("\033[5;%dH\033[0;2;34m--------------------------------------------------------", winSizeCol / 2 - 27);
 		for (int i = 0; i < 7; i++) {
-			gotoxy(i + 6, winSizeCol / 2 - 27);
+			Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 			printf("\033[0;2;34m|\033[54C|");
 		}
 		printf("\033[13;%dH--------------------------------------------------------", winSizeCol / 2 - 27);
 		printf("\033[0;2;32m\033[6;%dH↑\033[11;%dH↓\033[11;%dH\033[0;2;32m%d/%d\033[0;1;33m", winSizeCol / 2 - 1, winSizeCol / 2 - 1, winSizeCol / 2 + 25, currentPage,allPages);
 		printf("\033[2;%dH\033[1;32m%s\033[0m", winSizeCol / 2 - (int)strlen(title) / 2, title);
 #else
-		gotoxy(6, winSizeCol / 2 - 1);
+		Gotoxy_TER(6, winSizeCol / 2 - 1);
 		printf("↑");
-		gotoxy(11, winSizeCol / 2 - 1);
+		Gotoxy_TER(11, winSizeCol / 2 - 1);
 		printf("↓");
-		gotoxy(11, winSizeCol / 2 + 24);
+		Gotoxy_TER(11, winSizeCol / 2 + 24);
 		printf("%2d/%2d", currentPage,allPages);
-		gotoxy(2, winSizeCol / 2 - (int)strlen(title) / 2);
+		Gotoxy_TER(2, winSizeCol / 2 - (int)strlen(title) / 2);
 		printf("%s", title);
-		gotoxy(5, winSizeCol / 2 - 27);
+		Gotoxy_TER(5, winSizeCol / 2 - 27);
 		printf("--------------------------------------------------------");
 		for (int i = 0; i < 7; i++) {
-			gotoxy(i + 6, winSizeCol / 2 - 27);
+			Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 			printf("|");
-			gotoxy(i + 6, winSizeCol / 2 + 27);
+			Gotoxy_TER(i + 6, winSizeCol / 2 + 27);
 			printf("|");
 		}
-		gotoxy(13, winSizeCol / 2 - 27);
+		Gotoxy_TER(13, winSizeCol / 2 - 27);
 		printf("--------------------------------------------------------");
 #endif
 		for (int i = 1; i <= tl - list * 4 * (currentPage - 1) && i <= list * 4; i++) {
@@ -55,7 +56,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 #ifdef __linux
 				printf("\033[33m\033[%d;%dH%s\033[0m", (i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32, text[i - 1 +  list * 4 * (currentPage - 1)]);
 #else
-				gotoxy((i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32);
+				Gotoxy_TER((i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32);
 				printf("%s", text[i - 1 +  list * 4 * (currentPage - 1)]);
 #endif
 			}
@@ -63,7 +64,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 #ifdef __linux
 				printf("\033[1;7;33m\033[%d;%dH%s\033[0m", (i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32, text[i - 1 +  list * 4 * (currentPage - 1)]);
 #else
-				gotoxy((i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32 - list);
+				Gotoxy_TER((i + 1) / list + 6 - list % 2, winSizeCol / 2 - 20 + ((i + 1) % list) * 32 - list);
 				printf("> %s", text[i - 1 +  list * 4 * (currentPage - 1)]);
 #endif
 			}
@@ -115,7 +116,7 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 				}
 			}
 			else {
-				Clear2;
+				Clear_SYS;
 				return 0;
 			}
 		}
@@ -159,17 +160,17 @@ int ctools_old_menu(char *title, char *text[], int tl, int list) { /* 菜单程�
 			}
 		}
 		else if (input == 'q' || input == 'Q') {
-			Clear;
+			Clear_SYS;
 			return '0';
 		}
 		else if (input == ' ' || input == '\r' || input == '\n') {
-			Clear2;
+			Clear_SYS;
 			char output[10];
 			sprintf(output, "%d", count + 8 * (currentPage - 1));
 			return output[0];
 		}
 		else {
-			Clear2;
+			Clear_SYS;
 			return input;
 		}
 	}
@@ -187,7 +188,7 @@ extern void ctools_old_menu2(char title[], short pages, short allPages)
 	printf("\033[2;%dH\033[0;1;32m%s", winSizeCol / 2 - (int)strlen(title) / 2, title);
 	printf("\033[5;%dH\033[34m--------------------------------------------------------", winSizeCol / 2 - 27);
 	for (int i = 0; i < 7; i++) {
-		gotoxy(i + 6, winSizeCol / 2 - 27);
+		Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 		printf("|\033[54C|");
 	}
 	printf("\033[13;%dH--------------------------------------------------------", winSizeCol / 2 - 27);
@@ -204,7 +205,7 @@ extern void ctools_old_menu3(char title[])
 		printf("\033[2;%dH\033[0;1;32m%s", winSizeCol / 2 - (int)strlen(title) / 2, title);
 		printf("\033[5;%dH\033[0;2;34m--------------------------------------------------------", winSizeCol / 2 - 27);
 		for (int i = 0; i < 7; i++) {
-			gotoxy(i + 6, winSizeCol / 2 - 27);
+			Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 			printf("|\033[54C|");
 		}
 		printf("\033[13;%dH--------------------------------------------------------", winSizeCol / 2 - 27);
@@ -218,45 +219,45 @@ extern void ctools_old_menu2(char title[], short pages, short allPages)
 {
 	int winSizeCol = 56;
 
-	gotoxy(6, winSizeCol / 2 - 1);
+	Gotoxy_TER(6, winSizeCol / 2 - 1);
 	printf("↑");
-	gotoxy(10, winSizeCol / 2 - 1);
+	Gotoxy_TER(10, winSizeCol / 2 - 1);
 	printf("↓");
-	gotoxy(11, winSizeCol / 2 + 24);
+	Gotoxy_TER(11, winSizeCol / 2 + 24);
 	printf("%d/%d", pages,allPages);
-	gotoxy(2, winSizeCol / 2 - (int)strlen(title) / 2);
+	Gotoxy_TER(2, winSizeCol / 2 - (int)strlen(title) / 2);
 	printf("%s", title);
-	gotoxy(5, winSizeCol / 2 - 27);
+	Gotoxy_TER(5, winSizeCol / 2 - 27);
 	printf("--------------------------------------------------------");
 	for (int i = 0; i < 7; i++) {
-		gotoxy(i + 6, winSizeCol / 2 - 27);
+		Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 		printf("|");
-		gotoxy(i + 6, winSizeCol / 2 + 27);
+		Gotoxy_TER(i + 6, winSizeCol / 2 + 27);
 		printf("|");
 	}
-	gotoxy(13, winSizeCol / 2 - 27);
+	Gotoxy_TER(13, winSizeCol / 2 - 27);
 	printf("--------------------------------------------------------");
-	gotoxy(11, winSizeCol / 2 - 23);
+	Gotoxy_TER(11, winSizeCol / 2 - 23);
 	printf("请选择:");
 }
 extern void ctools_old_menu3(char title[])
 {
 	int winSizeCol = 56;
 
-	gotoxy(2, winSizeCol / 2 - (int)strlen(title) / 2);
+	Gotoxy_TER(2, winSizeCol / 2 - (int)strlen(title) / 2);
 	printf("%s", title);
-	gotoxy(5, winSizeCol / 2 - 27);
+	Gotoxy_TER(5, winSizeCol / 2 - 27);
 	printf("--------------------------------------------------------");
 	for (int i = 0; i < 7; i++) {
-		gotoxy(0, 0);
-		gotoxy(i + 6, winSizeCol / 2 - 27);
+		Gotoxy_TER(0, 0);
+		Gotoxy_TER(i + 6, winSizeCol / 2 - 27);
 		printf("|");
-		gotoxy(i + 6, winSizeCol / 2 + 27);
+		Gotoxy_TER(i + 6, winSizeCol / 2 + 27);
 		printf("|");
 	}
-	gotoxy(13, winSizeCol / 2 - 27);
+	Gotoxy_TER(13, winSizeCol / 2 - 27);
 	printf("--------------------------------------------------------");
-	gotoxy(11, winSizeCol / 2 - 23);
+	Gotoxy_TER(11, winSizeCol / 2 - 23);
 	printf("按任意按键返回：");
 }
 #endif

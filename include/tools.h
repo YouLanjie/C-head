@@ -30,32 +30,26 @@
 #include <ncurses.h>
 #include <locale.h>
 
-#ifndef Clear
-/* 使用ncurse的 */
-#define Clear clear()
-#endif
-
-#ifndef Clear2
+#ifndef Clear_TER
 /* 终端效果 */
-#define Clear2 printf("\033[2J")
+#define Clear_TER printf("\033[2J")
 #endif
 
-#ifndef Clear3
+#ifndef Clear_SYS
 /* 系统 */
-#define Clear3 system("clear")
+#define Clear_SYS system("clear")
 #endif
 
-#ifndef fontColorSet
-#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-#endif
-
-#ifndef gotoxy
-#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#ifndef Gotoxy_TER
+#define Gotoxy_TER(x,y) printf("\033[%d;%dH",x, y)
 #endif
 
 /* kbhit */
 extern int ctools_kbhit();
 extern int ctools_getch();
+
+/* Old menu */
+extern int ctools_old_menu(char *title, char *text[], int tl, int list);
 
 #endif
 
@@ -67,20 +61,16 @@ extern int ctools_getch();
 #include <windows.h>
 #include <conio.h>
 
-#ifndef Clear
-	#define Clear printf("\033[2J\033[1;1H")
+#ifndef Clear_TER
+	#define Clear_TER printf("\033[2J\033[1;1H")
 #endif
 
-#ifndef Clear2
-	#define Clear2 system("cls")
+#ifndef Clear_SYS
+	#define Clear_SYS system("cls")
 #endif
 
-#ifndef fontColorSet
-	#define fontColorSet(a,b) printf("\033[%d;%dm",a, b)
-#endif
-
-#ifndef gotoxy
-	#define gotoxy(x,y) printf("\033[%d;%dH",x, y)
+#ifndef Gotoxy_TER
+	#define Gotoxy_TER(x,y) printf("\033[%d;%dH",x, y)
 #endif
 
 #endif
@@ -92,11 +82,9 @@ extern int ctools_getch();
 /* kbhit */
 extern int ctools_kbhitGetchar();
 
-/* menu */
-extern int Menu(char *title, char *text[], int tl, int list);
-extern void Menu2(char title[], short p, short a);
-extern void Menu3(char title[]);
-
+/* Old menu */
+extern void ctools_old_menu2(char title[], short p, short a);
+extern void ctools_old_menu3(char title[]);
 
 /* 
  * 新菜单
@@ -144,6 +132,22 @@ typedef struct {
 } ctools_cmd;
 extern const ctools_cmd CT_CMD;
 /* use by `CT_CMD` */
+
+/*
+ * 读取配置文件
+ */
+struct ctools_CONFIG_NODE;
+typedef struct {
+	char *(*read)(char *filename);
+	struct ctools_CONFIG_NODE *(*run)(char*);
+	struct ctools_CONFIG_NODE *(*runner)(char *data);
+	char *(*get_name)(struct ctools_CONFIG_NODE*);
+	int   (*get_type)(struct ctools_CONFIG_NODE*);
+	char *(*get_str)(struct ctools_CONFIG_NODE*);
+	int   (*get_num)(struct ctools_CONFIG_NODE*);
+	struct ctools_CONFIG_NODE *(*get_next)(struct ctools_CONFIG_NODE*);
+}ctools_config;
+/* use by `CT_CONF` */
 
 #endif
 
