@@ -238,7 +238,7 @@ static struct ctools_CONFIG_NODE *runner()
 							Config.curs_node->num = value.num;
 						} else if (type == TK_STRING) {
 							Config.curs_node->type = 2;
-							Config.curs_node->ch = malloc(sizeof(char)*(value.end - (value.begin + 1)));
+							Config.curs_node->ch = malloc(sizeof(char)*(value.end - value.begin));
 							strncpy(Config.curs_node->ch, (value.begin + 1), value.end - (value.begin + 1));
 							Config.curs_node->ch[value.end - (value.begin + 1)] = '\0';
 						}
