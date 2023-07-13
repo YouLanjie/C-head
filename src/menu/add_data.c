@@ -11,8 +11,10 @@
 
 #include "./menu.h"
 
-/* 添加选项 */
-extern void add_text(Data * data, ...)
+/*
+ * 设置选项
+ */
+extern void set_text(Data * data, ...)
 {
 	struct Data *pNew = NULL, *pTmp = NULL;
 	va_list text;
@@ -58,17 +60,45 @@ extern void add_text(Data * data, ...)
 	return;
 }
 
-/* 添加描述信息 */
-/* type:
- *  0 -> describe,
- *  1 -> type(for setting)
- *  2 -> var
- *  3 -> foot
- *  4 -> max
- *  5 -> min
- *  o -> function
+/*
+ * 添加选项
  */
-extern void add_text_data(Data * data, char *type, char * format, ...)
+extern void add_text(Data * data, char *text)
+{
+	struct Data *pNew = NULL, *pTmp = NULL;
+
+	pNew = data->text;
+	while (pNew->nextText != NULL) pNew = pNew->nextText;
+	pTmp = pNew;
+	pNew->nextText = malloc(sizeof(struct Data));
+	pNew = pNew->nextText;
+	pNew->text = malloc(sizeof(char)*(strlen(text) + 1));
+	strcpy(pNew->text, text);
+	pNew->describe = NULL;
+	pNew->number = pTmp->number + 1;
+	pNew->cfg = 0;
+	pNew->foot = 1;
+	// pNew -> max      = 2147483647;    /* 整型的最大值 */
+	// pNew -> min      = -2147483648;    /* 整型的最小值 */
+	pNew->max = 10000000;
+	pNew->min = -10000000;
+	pNew->var = NULL;
+	pNew->function = NULL;
+	pNew->nextText = NULL;
+	return;
+}
+
+/* 添加描述信息 */
+/* All type list:
+ *  0 <-> describe,
+ *  1 <-> type(for setting)
+ *  2 <-> var
+ *  3 <-> foot
+ *  4 <-> max
+ *  5 <-> min
+ *  o <-> function
+ */
+extern void set_text_data(Data * data, char *type, char * format, ...)
 {
 	struct Data *pNew;
 	va_list text;
@@ -102,6 +132,28 @@ extern void add_text_data(Data * data, char *type, char * format, ...)
 		format++;
 	}
 	va_end(text);
+	return;
+}
+
+/*
+ * 增加数据
+ */
+extern void add_text_data(Data * data, char *type, char * text)
+{
+	struct Data *pNew = NULL;
+
+	pNew = data->text;
+	while (pNew->nextText != NULL) pNew = pNew->nextText;
+
+#define S(t) (strcmp(t, type) == 0)
+	if (S("describe")) {
+		pNew->describe = malloc(sizeof(char)*(strlen(text) + 1));
+		strcpy(pNew->text, text);
+	} else if (S("type")) pNew->cfg  = strtod(text, NULL);
+	else if (S("foot"))   pNew->foot = strtod(text, NULL);
+	else if (S("max"))    pNew->max  = strtod(text, NULL);
+	else if (S("min"))    pNew->min  = strtod(text, NULL);
+#undef S
 	return;
 }
 

@@ -95,8 +95,10 @@ typedef struct {
 	void (*const data_init)(struct ctools_menu_t**);
 	void (*const set_title)(struct ctools_menu_t*, char*);
 	void (*const set_type)(struct ctools_menu_t*, char*);
-	void (*const add_text)(struct ctools_menu_t*, ...);
-	void (*const add_text_data)(struct ctools_menu_t*, char*, char*, ...);
+	void (*const set_text)(struct ctools_menu_t*, ...);
+	void (*const add_text)(struct ctools_menu_t*, char*);
+	void (*const set_text_data)(struct ctools_menu_t*, char*, char*, ...);
+	void (*const add_text_data)(struct ctools_menu_t*, char*, char*);
 	int  (*const show)(struct ctools_menu_t*);
 } ctools_menu;
 extern const ctools_menu CT_MENU;

@@ -42,8 +42,10 @@ struct display {
 	/* void (*screen)(); */
 };
 
-extern void add_text(Data *, ...);
-extern void add_text_data(Data*, char*, char*, ...);
+extern void set_text(Data *, ...);
+extern void add_text(Data *, char*);
+extern void set_text_data(Data*, char*, char*, ...);
+extern void add_text_data(Data*, char*, char*);
 extern void get_focus(Data*, int);
 
 // 定义宏

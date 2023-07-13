@@ -20,7 +20,9 @@ const ctools_menu CT_MENU = {
 	.data_init     = data_init,
 	.set_title     = set_title,
 	.set_type      = set_type,
+	.set_text      = set_text,
 	.add_text      = add_text,
+	.set_text_data = set_text_data,
 	.add_text_data = add_text_data,
 	.show          = Show,
 };
