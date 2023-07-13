@@ -91,7 +91,7 @@ static void set_title(Data *data, char *title)
 {
 	char *t = NULL;
 	if (data == NULL || title == NULL || *title == '\0') return;
-	t = (char*)malloc(strlen(title));
+	t = (char*)malloc(strlen(title) + 1);
 	strcpy(t, title);
 	data->title = t;
 	return;
