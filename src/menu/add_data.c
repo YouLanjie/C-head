@@ -68,14 +68,20 @@ extern void add_text(Data * data, char *text)
 	struct Data *pNew = NULL, *pTmp = NULL;
 
 	pNew = data->text;
-	while (pNew->nextText != NULL) pNew = pNew->nextText;
-	pTmp = pNew;
-	pNew->nextText = malloc(sizeof(struct Data));
-	pNew = pNew->nextText;
+	while (pNew != NULL && pNew->nextText != NULL) pNew = pNew->nextText;
+	if (pNew != NULL) {
+		pTmp = pNew;
+		pNew->nextText = malloc(sizeof(struct Data));
+		pNew = pNew->nextText;
+	} else {
+		pNew = malloc(sizeof(struct Data));
+		data->text = pNew;
+	}
 	pNew->text = malloc(sizeof(char)*(strlen(text) + 1));
 	strcpy(pNew->text, text);
 	pNew->describe = NULL;
-	pNew->number = pTmp->number + 1;
+	if (pTmp != NULL) pNew->number = pTmp->number + 1;
+	else pNew->number = 1;
 	pNew->cfg = 0;
 	pNew->foot = 1;
 	// pNew -> max      = 2147483647;    /* 整型的最大值 */
