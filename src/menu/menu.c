@@ -239,10 +239,10 @@ static int Show(Data * data)
 				else
 					*(data->focus->var) = 0;
 			} else if (data->cfg == 0) {
-				clear();
-				char output[10];	/* 仅用作字符输出 */
-				sprintf(output, "%d", focus_text);
-				return output[0];
+				/* clear(); */
+				/* char output[10];	/\* 仅用作字符输出 *\/ */
+				/* sprintf(output, "%d", focus_text); */
+				return focus_text;    /* 输出所选数字 */
 			}
 			break;
 		case '+':
@@ -265,12 +265,6 @@ static int Show(Data * data)
 					(*data->focus->var) -= data->focus->foot;
 			}
 			break;
-		case '0':	/* 返回字符0 */
-			clear();
-			if (data->cfg == 2)
-				get_focus(data, 1);
-			return '0';
-			break;
 		case 0:	/* 什么都不做 */
 			break;
 		case '\t':	/* 切换介绍与选项 */
@@ -286,8 +280,12 @@ static int Show(Data * data)
 			}
 			break;
 		default:	/* 返回输入的字符 */
-			if (data->cfg == 0)
+			if (data->cfg == 0) {
+				if (input >= '0' && input <= '9') {
+					input-=48;
+				}
 				return input;
+			}
 			break;
 		}
 	}
