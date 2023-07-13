@@ -149,12 +149,13 @@ extern void add_text_data(Data * data, char *type, char * text)
 	struct Data *pNew = NULL;
 
 	pNew = data->text;
-	while (pNew->nextText != NULL) pNew = pNew->nextText;
+	while (pNew != NULL && pNew->describe != NULL) pNew = pNew->nextText;
+	if (pNew == NULL) return;
 
 #define S(t) (strcmp(t, type) == 0)
 	if (S("describe")) {
 		pNew->describe = malloc(sizeof(char)*(strlen(text) + 1));
-		strcpy(pNew->text, text);
+		strcpy(pNew->describe, text);
 	} else if (S("type")) pNew->cfg  = strtod(text, NULL);
 	else if (S("foot"))   pNew->foot = strtod(text, NULL);
 	else if (S("max"))    pNew->max  = strtod(text, NULL);
