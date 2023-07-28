@@ -94,15 +94,17 @@ extern void add_text(Data * data, char *text)
 	return;
 }
 
-/* 添加描述信息 */
-/* All type list:
- *  0 <-> describe,
- *  1 <-> type(for setting)
- *  2 <-> var
- *  3 <-> foot
- *  4 <-> max
- *  5 <-> min
- *  o <-> function
+/*
+ * 设定描述信息
+ *
+ * All support type list:
+ *  [x] 0 <-> describe,
+ *  [x] 1 <-> type(for setting)
+ *  [x] 2 <-> var
+ *  [x] 3 <-> foot
+ *  [x] 4 <-> max
+ *  [x] 5 <-> min
+ *  [x] o <-> function
  */
 extern void set_text_data(Data * data, char *type, char * format, ...)
 {
@@ -143,6 +145,15 @@ extern void set_text_data(Data * data, char *type, char * format, ...)
 
 /*
  * 增加数据
+ *
+ * All support type list:
+ *  [x] 0 <-> describe,
+ *  [x] 1 <-> type(for setting)
+ *  [ ] 2 <-> var
+ *  [x] 3 <-> foot
+ *  [x] 4 <-> max
+ *  [x] 5 <-> min
+ *  [ ] o <-> function
  */
 extern void add_text_data(Data * data, char *type, char * text)
 {
