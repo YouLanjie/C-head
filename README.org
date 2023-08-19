@@ -6,16 +6,25 @@
 ** 我想说的
 这个仓库的名字其实是不太合适的，因为这个仓库本来是储存我编写C语言程序时用于方便
 地引用一些头文件与使用一些所有程序都能用的功能。
+#+begin_quote
+警告！该仓库的内容并不能无缝移植到Windows平台，请自行忽略 =#ifdef _WIN32= 中的内
+容
+#+end_quote
 ** 使用方法
 要使用本仓库的工具仅需要在程序内引用 =include= 目录下的 =tools.h= 文件，并且在编
 译程序时让编译器链接 =lib= 目录下编译好的任意一个（对应你系统的）库文件以及链接
 ncursesw库即可。
 #+begin_quote
-=lib=下的库文件是在 /x86_64/ 架构下编译的，如果你的系统架构不是 /x86_64/ 也可以自行编译源代码为库文件或者直接将源代码复制到工程目录（或者其他目录）并在编译时也将该仓库内的源代码也引用上
+=lib=下的库文件是在 /x86_64/ 架构下编译的，如果你的系统架构不是 /x86_64/ 也可以
+自行编译源代码为库文件或者直接将源代码复制到工程目录（或者其他目录）并在编译时也
+将该仓库内的源代码也引用上
 
 而使用动态库与静态库的方法我不再赘述，请自行搜索
 #+end_quote
 ** 仓库功能
+#+begin_quote
+注意！本README文件内容可能会跟不上代码翻新的速度，具体功能请以实际代码为准
+#+end_quote
 *** 定义了Linux标准库没有的特殊输入函数
 - =ctools_getch()= 不回显的输入函数，可供实现 _等待用户输入，输入后无需回车确认
   让程序继续并且不显示输入的字符_ 的功能（返回整数值作为字符值）（即输入不回显，
@@ -28,14 +37,13 @@ ncursesw库即可。
 头文件，因为windows内置这两个函数
 #+end_quote
 *** 定义了一些宏定义
-- =Clear= 形同虚设，调用Ncurses的clear()
-- =Clear2= 用于清屏，但是只是打印字符 =\033[2J= 清屏，会在屏幕上打印大量的空格，
-  滚动条可以向上翻，可以配合 =\033= 控制符为程序打上一个底色
-- =Clear3= 同样用于清屏，但是是调用系统命令，在Linux下这样会稍慢一些但又干净一
-  些，而在Windows下效果同上，但用系统函数移动光标时会移动到上面的内容，除非使用
-  =\033[%d;%dH= 的形式移动光标（但较老的win系统似乎不支持）
-- =gotoxy= 本来是用于适配windows用系统函数的方式移动光标的，但是发现windows10下
-  也支持使用 =\033= 移动光标后就改为了一个宏定义，基本无用。
+- =Clear_TER= 用于清屏，但是只是打印字符 =\033[2J= 清屏，会在屏幕上打印大量的空
+  格，滚动条可以向上翻，可以配合 =\033= 控制符为程序打上一个底色
+- =Clear_SYS= 同样用于清屏，但是是调用系统命令，在Linux下这样会稍慢一些但又干净
+  一些，而在Windows下效果同上，但用系统函数移动光标时会移动到上面的内容，除非使
+  用 =\033[%d;%dH= 的形式移动光标（但较老的win系统似乎不支持）
+- =Gotoxy_TER= 本来是用于适配windows用系统函数的方式移动光标的，但是发现
+  windows10下也支持使用 =\033= 移动光标后就改为了一个宏定义，基本无用。
 *** 自行编写的通用工具
 **** 个人认为最有用的——menu菜单功能
 注意：该功能现未通过兼容测试
@@ -44,130 +52,130 @@ ncursesw库即可。
 且可以为选项添加描述，充当半个帮助。选项、描述采用滚动设计，若光标移动到了显示上
 限但还有选项时会让选项上滚，描述也同理，都是可以翻动的，并且描述还使用了白底黑字
 做显示颜色（可能有的终端会显示成黑底黑色），选中项则做反色处理
-***** 功能介绍：功能的基本结构——结构体
+***** 功能介绍：接口一览
 该功能并非仅有一个函数，而是由多个函数组成
 
 为确保该功能能够拥有较好的扩展性，我使用了些面向对象的思想，定义了两个结构体，其
 中有一个还是是使用了 =typedef= 加以修饰的
 
 #+begin_src c
-  struct Text {
-          char        * text;         /* 条例内容 */
-          char        * describe;     /* 描述/帮助信息 */
-          void       (* function)();  /* 调用的函数 */
-          int         * var;          /* 调整的变量值 */
-          int           number;       /* 编号 */
-          int           cfg;          /* 类型：1数值，2开关 */
-          int           foot;         /* 设置的步长 */
-          int           max;          /* 设置的最大值 */
-          int           min;          /* 设置的最小值 */
-          struct Text * nextText;     /* 下一条例（链表） */
-  };                                  /* 条例结构体 */
+  /* 
+   ,* 新菜单
+   ,*/
+  struct ctools_menu_t;		/* 菜单类/结构体 */
+  typedef struct {
+          void (*const ncurses_init)();
+          void (*const data_init)(struct ctools_menu_t ** data);
+          void (*const set_title)(struct ctools_menu_t * data, char *title);
+          void (*const set_type)(struct ctools_menu_t * data, char *type_str);
+          void (*const set_text)(struct ctools_menu_t * data, ...);
+          void (*const add_text)(struct ctools_menu_t * data, char *new_text);
+          void (*const set_text_data)(struct ctools_menu_t * data, char *type_str, char *format, ...);
+          void (*const add_text_data)(struct ctools_menu_t * data, char *type_str, char *obj);
+          int (*const show)(struct ctools_menu_t * data);
+  } ctools_menu;
+  /* extern const ctools_menu CT_MENU; */
+  /* use by `CT_MENU` */
 
-  typedef struct _ctools_menu_t{
-          char        * title;    /* j标题 */
-          struct Text * text;     /* 条例链表头 */
-          struct Text * focus;    /* 选中的条例 */
-          int           cfg;      /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
-  } ctools_menu_t;              /* 菜单类/结构体 */
-
-  /* 初始化ncurse，设置语言、颜色对 */
-  extern void ctools_menu_Init();
-  /* 初始化变量 */
-  extern void ctools_menu_t_init(ctools_menu_t ** tmp);
-  /* 添加选项 */
-  extern void ctools_menu_AddText(ctools_menu_t * data, ...);
-  /* 添加描述信息 */
-  extern void ctools_menu_AddTextData(ctools_menu_t * data, int type, char * format, ...);
-  /* 移动焦点变量到指定节点 */
-  extern void ctools_menu_GetFocus(ctools_menu_t * data, int number);
-  /* 显示菜单 */
-  extern int  ctools_menu_Show(ctools_menu_t * data);
+  #define ctools_menu_TextTypeNumber   1
+  #define ctools_menu_TextTypeButton   2
 #+end_src 
 
-上面是对外公开的所有内容。  
-我们可以将类型 =menuData= 看作一个"类"，这个类有着各种属性与方法（函数指针），
-在使用菜单时需要定义一个 =menuData= 型的变量并调用 =menuDataInit= 函数用于为变量初始化。
+上面是对用户公开的所有内容。  
+在使用菜单时需要定义一个 =struct ctools_menu_t= 型的变量并调用结构体 =CT_MENU=
+中的 =data_init= 函数用于为变量初始化。
 
-一下是对各个属性的说明：
+以下是对各个函数的说明：
 
-- 为 =title= 赋值定义标题
-- 为 =cfg= 赋值设置菜单类型
-  1. 0 默认
-  2. 1 仅显示主界面
-  3. 2 帮助模式
-  4. 3 设置模式
-  5. 4 仅显示帮助，无输入处理
-- =text= 用于组成链表以储存选项及其信息
-  - =text= 储存选项
-  - =describe= 保存选项的描述信息
-  - =function= 用于指向要调用的函数（未实装）
-  - =var= 用于指定菜单类型为设置时该选项要调整的变量
-  - =number= 在链表中的编号
-  - =cfg= 配置在主菜单类型为设置时的选项类型，1数值，2开关
-  - =foot= 用于指定菜单类型为设置时且该选项的类型为数值时该选项要调整的变量数值的步长
-  - =nextText= 指定下一个节点
-- =focus= 用于指向正在操作的节点，用于方便操作
-- 调用 =addText= 为 =text= 添加选项
-- 调用 =addTextData= 为 =text= 中的各个选项设置属性。
-  - 第二参数
-    1. 0 添加描述
-    2. 1 设置类型/选项
-    3. 2 设置调整的变量
-    4. 3 设置步长
-    5. 4 设置函数（未测试）
+- =ncurses_init=
+  初始化ncurses
+- =data_init=
+  初始化数据结构体
+- =set-title=
+  设置界面标题
+- =set_type=
+  设置菜单的类型
+  - 类型列表
+    1. =normal= 默认
+    2. =main_only= 仅显示主界面
+    3. =help= 帮助模式
+    4. =setting= 设置模式
+    5. =help_only= 仅显示帮助界面，无输入处理
+- =set_text=
+  设置菜单的选项，可选参数类型为char（最后一个参数必须为 =NULL= !）
+- =add_text=
+  添加菜单选项
+- =set_text_data=
+  为菜单的各个选项设置属性。
+  - 第二参数：属性的类型
+    - =describe= 描述
+    - =type= 类型/选项
+    - =var= 调整的变量
+    - =foot= 步长
+    - =max= 变量的最大值
+    - =min= 变量的最小值
   - 第三参数：控制字符串
     - =%s= 用于告诉程序将未使用的参数分配给第N个节点（N从1算起）
     - =n= 用于跳过节点（大小写通用）
     - 示例： ="%s %s N %s N N N %s"=  
       将参数一次写入到第一、第二、（第三被跳过）、  
       第四、（第五六七节点被跳过）、第八节点
-- 调用 =menuShow= 开始菜单程序
-- 调用 =getFocus= 用于移动 =focus= 指向的节点
+- =add_text_data=
+  为菜单的最后一个未添加指定属性的选项添加属性。仅支持 =type= =foot= =max= =min=
+  这四种类型
+- =show=
+  显示菜单程序，返回经过处理的输入
+  - 输入与返回值对照
+    - 数字 => int型数字
+    - 空格/回车 => 对应选项的序号
+    - 字符 => int型字符
+    - =q= / =ESC= => 0
 ***** 实际使用
 参考使用代码：
-
 #+begin_src c
-#include "/path/to/file/tools.h"    //引用头文件
+  #include "/path/to/file/tools.h"    //引用头文件
 
-int main() {
-        int input;    //用于保存输入的字符
-        ctools_menu_t * data = NULL;    //这里指针名字任意，但一定要赋值为NULL
+  extern const ctools_menu CT_MENU;
 
-        /* 初始化Ncurses */
-        ctools_menu_Init();
+  int main() {
+          int input;    //用于保存输入的字符
+          struct ctools_menu_t * data = NULL;    //这里指针名字任意，但一定要赋值为NULL
+          // const ctools_menu *p = &CT_MENU;    // 可以将CT_MENU用一个指针指向或者直接定义变量赋值
 
-        // 初始化指针（申请空间、赋值）
-        ctools_menu_t_init(&data);
+          /* 初始化Ncurses */
+          CT_MENU.ncurses_init();
 
-        //设置菜单的标题（以前留空会直接挂，现在可以留空）
-        data->title = "这里填写你的标题";
+          // 初始化指针（申请空间、赋值）
+          CT_MENU.data_init(&data);
 
-        //这里是设置类型，一般不用设置，因为已经初始化了
-        data->cfg   = 0;
+          //设置菜单的标题（以前留空会直接挂，现在可以留空）
+          CT_MENU.set_title(data, "这里填写你的标题");
 
-        //一定要先添加选项再添加描述
-        //一定要在参数的最后加上NULL作为结束符
-        ctools_menu_AddText(data, "选项1", "选项2", "选项n", NULL);
+          //这里是设置类型，一般不用设置，因为已经初始化了
+          CT_MENU.set_type(data, "normal");
 
-        //谈及选项数据（条数不能超过选项的条数）
-        //第三个参数是控制字符串，%s的数量不可以超过节点的数量
-        ctools_menu_AddTextData(data, 0, "%s", "这是一条描述");
+          //一定要先添加选项再添加描述
+          //一定要在参数的最后加上NULL作为结束符
+          CT_MENU.set_text(data, "选项1", "选项2", "选项n", NULL);
 
-        //调用函数显示菜单，并保存返回值
-        input = ctools_menu_Show(data);
+          //谈及选项数据（条数不能超过选项的条数）
+          //第三个参数是控制字符串，%s的数量不可以超过节点的数量
+          CT_MENU.set_text_data(data, 0, "%s", "这是一条描述");
 
-        //输入处理等。。。
-        //.........
-        endwin();
-}
+          //调用函数显示菜单，并保存返回值
+          input = CT_MENU.show(data);
+
+          //输入处理等。。。
+          //.........
+          endwin();
+  }
 #+end_src 
 ***** 操作介绍
 移动按键支持三套：
 
 - WASD
 - hjkl（Vim的键位）
-- 直接使用方向键（仅限Linux）
+- 直接使用方向键 +（仅限Linux）+ （整套程序仅限Linux）
 
 使用 =Tab= 键在选项与描述间跳转
 
@@ -201,5 +209,5 @@ int main() {
   其中的选项内容为程序额外添加的，
   #+end_quote
 - =Menu3= 与 =Menu2= 函数区别不大，主要就是没有翻页提示以及提示语变为了 =按任意键返回=
-
-  
+**** 配置文件解读程序
+懒了，不想写了，自己看 =include/tools.h= 最后面的部分内容

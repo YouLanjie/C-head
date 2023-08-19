@@ -89,19 +89,19 @@ extern void ctools_old_menu3(char title[]);
 /* 
  * 新菜单
  */
-struct ctools_menu_t;    /* 菜单类/结构体 */
+struct ctools_menu_t;		/* 菜单类/结构体 */
 typedef struct {
 	void (*const ncurses_init)();
-	void (*const data_init)(struct ctools_menu_t**);
-	void (*const set_title)(struct ctools_menu_t*, char*);
-	void (*const set_type)(struct ctools_menu_t*, char*);
-	void (*const set_text)(struct ctools_menu_t*, ...);
-	void (*const add_text)(struct ctools_menu_t*, char*);
-	void (*const set_text_data)(struct ctools_menu_t*, char*, char*, ...);
-	void (*const add_text_data)(struct ctools_menu_t*, char*, char*);
-	int  (*const show)(struct ctools_menu_t*);
+	void (*const data_init)(struct ctools_menu_t ** data);
+	void (*const set_title)(struct ctools_menu_t * data, char *title);
+	void (*const set_type)(struct ctools_menu_t * data, char *type_str);
+	void (*const set_text)(struct ctools_menu_t * data, ...);
+	void (*const add_text)(struct ctools_menu_t * data, char *new_text);
+	void (*const set_text_data)(struct ctools_menu_t * data, char *type_str, char *format, ...);
+	void (*const add_text_data)(struct ctools_menu_t * data, char *type_str, char *obj);
+	int (*const show)(struct ctools_menu_t * data);
 } ctools_menu;
-extern const ctools_menu CT_MENU;
+/* extern const ctools_menu CT_MENU; */
 /* use by `CT_MENU` */
 
 #define ctools_menu_TextTypeNumber   1
@@ -132,7 +132,7 @@ typedef struct {
 	int                    const cmd_max_len;
 	int                    const arg_max_len;
 } ctools_cmd;
-extern const ctools_cmd CT_CMD;
+/* extern const ctools_cmd CT_CMD; */
 /* use by `CT_CMD` */
 
 /*
@@ -140,15 +140,16 @@ extern const ctools_cmd CT_CMD;
  */
 struct ctools_CONFIG_NODE;
 typedef struct {
-	char *(*read)(char *filename);
-	struct ctools_CONFIG_NODE *(*run)(char*);
-	struct ctools_CONFIG_NODE *(*runner)(char *data);
-	char *(*get_name)(struct ctools_CONFIG_NODE*);
-	int   (*get_type)(struct ctools_CONFIG_NODE*);
-	char *(*get_str)(struct ctools_CONFIG_NODE*);
-	int   (*get_num)(struct ctools_CONFIG_NODE*);
-	struct ctools_CONFIG_NODE *(*get_next)(struct ctools_CONFIG_NODE*);
+	char *(*readfile)(char *filename);
+	struct ctools_CONFIG_NODE *(*run_file)(char *filename);
+	struct ctools_CONFIG_NODE *(*run_char)(char *data);
+	char *(*get_name)(struct ctools_CONFIG_NODE* node);
+	int   (*get_type)(struct ctools_CONFIG_NODE* node);
+	char *(*get_str)(struct ctools_CONFIG_NODE* node);
+	int   (*get_num)(struct ctools_CONFIG_NODE* node);
+	struct ctools_CONFIG_NODE *(*get_next_node)(struct ctools_CONFIG_NODE* node);
 }ctools_config;
+/* extern const ctools_menu CT_CONF; */
 /* use by `CT_CONF` */
 
 #endif
