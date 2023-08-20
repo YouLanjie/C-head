@@ -110,27 +110,20 @@ typedef struct {
 /*
  * 命令行操作
  */
-union ctools_cmd_arg {
-        char  *ch;
-	char **chp;
-	int    num;
-};
-
-typedef struct ctools_cmd {
-	char const            *const name;
-	char const            *const describe;
-	union ctools_cmd_arg (*const v)(union ctools_cmd_arg);
-	struct ctools_cmd     *const next;
+typedef struct ctools_cmd_list {
+	char const             *const name;
+	char const             *const describe;
+	void *                (*const v)(void *);
+	struct ctools_cmd_list *const next;
 } ctools_cmd_list;
-extern ctools_cmd_list *Cmd_list;
 
 typedef struct {
-	int                  (*const cmd_list_set)(ctools_cmd_list*);
-	int                  (*const input)(char*);
-	union ctools_cmd_arg (*const run)(char[]);
-	int                  (*const ui)(void);
-	int                    const cmd_max_len;
-	int                    const arg_max_len;
+	int    (*const cmd_list_set)(ctools_cmd_list*);
+	int    (*const input)(char*);
+	void * (*const run)(char[]);
+	int    (*const ui)(void);
+	int      const cmd_max_len;
+	int      const arg_max_len;
 } ctools_cmd;
 /* extern const ctools_cmd CT_CMD; */
 /* use by `CT_CMD` */

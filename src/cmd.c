@@ -14,7 +14,6 @@
 #define CMD_MAX_LEN 1024
 #define ARG_MAX_LEN 1024
 
-typedef union ctools_cmd_arg Arg;
 typedef struct Opt {
 	char       *name;
 	char       *data;
@@ -26,7 +25,7 @@ static int cmd_list_set(ctools_cmd_list*);
 /* 提供一种输入方式 */
 static int cmd_input(char*);
 /* 运行命令（面向客户使用） */
-static Arg cmd_run(char command[CMD_MAX_LEN]);
+static void * cmd_run(char *command);
 /* 运行默认提供的tui交互界面 */
 static int cmd_tui(void);
 const ctools_cmd CT_CMD = {
@@ -38,15 +37,15 @@ const ctools_cmd CT_CMD = {
 	.arg_max_len  = ARG_MAX_LEN,
 };
 
-static Arg help();
-static Arg quit();
+static void *help();
+static void *quit();
 
-static Arg set(Arg format);
-static Arg print(Arg format);
-static Arg get(Arg result);
-static Arg list(Arg type);
-static Arg csave(Arg type);
-static Arg cread(Arg type);
+static void *set(void *format);
+static void *print(void *format);
+static void *get(void *result);
+static void *list(void *type);
+static void *csave(void *type);
+static void *cread(void *type);
 
 /* 默认命令列表 */
 static ctools_cmd_list Cmd_List[] = {
@@ -61,13 +60,13 @@ static ctools_cmd_list Cmd_List[] = {
 	{"read",  "读取值",   cread, &Cmd_List[9]},
 	{"\0",    "空行",     NULL,  NULL}
 };
-
+/* 用户命令列表 */
 ctools_cmd_list *Cmd_list = NULL;
 
 /* 起个头 */
-static Opt Opt_header[] = {
-	{"NULL", "NULL", NULL}
-};
+static Opt *Opt_header;
+
+static int ret_val = 0;
 
 /*
  * 设置额外的命令列表
@@ -84,26 +83,23 @@ static int cmd_list_set(ctools_cmd_list *list)
 static int cmd_tui(void)
 {
 	char name[CMD_MAX_LEN] = "\0";
-	Arg arg = {.ch = NULL};
 
 	/* 面向用户应该实现的形式 */
 	/* cmd_run("set cmd_line=Please input a command >"); */
 
 	/* 系统内部实现的形式 */
-	arg.ch = "cmd_line=Please input a command >";
-	set(arg);
+	set("cmd_line=Please input a command >");
 
 	while (1) {
 		/* 面向用户应该实现的形式 */
 		/* arg = cmd_run("get cmd_line"); */
 
 		/* 系统内部实现的形式 */
-		arg.ch = "cmd_line";
-		arg = get(arg);
+		char *tips;
+		tips = get("cmd_line");
 
-		if (arg.ch != NULL) {    /* 若有自定义提示 */
-			printf("\033[1;32m%s \033[0m",
-			       arg.ch);
+		if (tips != NULL) {    /* 若有自定义提示 */
+			printf("\033[1;32m%s \033[0m", tips);
 		} else {    /* 若为空 */
 			printf("\033[1;32m%s \033[0m",
 			       "Please input a command >");
@@ -111,9 +107,9 @@ static int cmd_tui(void)
 		/* 获取输入 */
 		cmd_input(name);
 		printf("\n");
-		int stat = cmd_run(name).num;
+		int *stat = cmd_run(name);
 		/* 判断报错 */
-		if (stat == -1) {
+		if (stat != NULL && *stat == -1) {
 			printf("Command not found: %s\n"
 			       "Someting is wrong.  --  \033[1;31m:(\033[0m\n"
 			       "Try input `help`\n", name);
@@ -125,7 +121,7 @@ static int cmd_tui(void)
 /*
  * 获取帮助
  */
-static Arg help(void)
+static void *help(void)
 {
 	ctools_cmd_list *
 		tmp = Cmd_List;
@@ -143,49 +139,41 @@ static Arg help(void)
 		printf("%s \t\t--  %s\n", tmp->name, tmp->describe);
 		tmp = tmp->next;
 	}
-	Arg arg = {.num = 0};
-	return arg;
+	return NULL;
 }
 
 /*
  * 离开程序
  */
-static Arg quit(void)
+static void *quit(void)
 {
 	exit(0);
-	Arg arg = {.num = 0};
-	return arg;
+	return NULL;
 }
 
 /*
  * 解析传入字符串查找并运行命令
  */
-static Arg cmd_run(char command[CMD_MAX_LEN])
+static void *cmd_run(char *command)
 {
-	int   stat = 0;
-	char  cmd[CMD_MAX_LEN]  = "\0";
-	char  arg[ARG_MAX_LEN]  = "\0";
-	Arg   result = {.num = 0};
+	char *cmd = NULL;
+	char *arg = NULL;
+	void *result = NULL;
+
+	if (command == NULL) return NULL;
 
 	/* 分离字符串和参数 */
-	for (int i = 0; command[i] != '\0'; ++i) {
-		if (stat) {
-			arg[i - stat] = command[i];
-		} else if (command[i] != ' ') {
-			cmd[i] = command[i];
-		}
-		/* 分隔符判定 */
-		if (!stat && command[i] == ' ') {
-			stat = i + 1;
-		}
+	for (cmd = command; command != NULL && *command != '\0' && *command != ' '; command++);
+	if (command != NULL && *command != '\0') {
+		*command = '\0';
+		arg = command + 1;
 	}
 	ctools_cmd_list * tmp = Cmd_List;
 	while (tmp != NULL) {
 		if (strcmp(cmd, tmp->name) == 0) {
 			/* printf("%s  --  %s\n", tmp->name, tmp->describe); */
 			if (tmp->v != NULL) {
-				Arg ARG = {.ch = arg};
-				result = tmp->v(ARG);
+				result = tmp->v(arg);
 			}
 			break;
 		}
@@ -197,8 +185,7 @@ static Arg cmd_run(char command[CMD_MAX_LEN])
 			if (strcmp(cmd, tmp->name) == 0) {
 				/* printf("%s  --  %s\n", tmp->name, tmp->describe); */
 				if (tmp->v != NULL) {
-					Arg ARG = {.ch = arg};
-					tmp->v(ARG);
+					result = tmp->v(arg);
 				}
 				break;
 			}
@@ -206,8 +193,8 @@ static Arg cmd_run(char command[CMD_MAX_LEN])
 		}
 	}
 	if (tmp == NULL) {
-		result.num = -1;
-		return result;
+		ret_val = -1;
+		return &ret_val;
 	}
 	return result;
 }
@@ -273,9 +260,9 @@ static int cmd_input(char *cmd)
 /*
  * 设置值
  */
-static Arg set(Arg format)
+static void *set(void *format)
 {
-	char *ch = format.ch;
+	char *ch = format;
 	char name[CMD_MAX_LEN] = "\0";
 	char var[CMD_MAX_LEN] = "\0";
 	int  i = 0;
@@ -308,17 +295,15 @@ static Arg set(Arg format)
 			*tmp = NULL,
 			*p   = NULL;
 
-		for (p = Opt_header; p != NULL && strcmp(p->name, name) != 0 ; p = p->next);
+		for (p = Opt_header; p != NULL && p->name != NULL && strcmp(p->name, name) != 0 ; p = p->next);
 		if (p == NULL) {
 			tmp = malloc(sizeof(struct Opt));
 			tmp->name = tmp->data = NULL;
 			tmp->next = NULL;
 		} else {
 			tmp = p;
-			if (strcmp(tmp->name, "NULL") != 0 && strcmp(tmp->data, "NULL") != 0 ) {
-				free(tmp->name);
-				free(tmp->data);
-			}
+			free(tmp->name);
+			free(tmp->data);
 			tmp->name = tmp->data = NULL;
 		}
 		tmp->name = malloc(strlen(name) + 1);
@@ -330,8 +315,9 @@ static Arg set(Arg format)
 		while (p != NULL && p != tmp && p->next != NULL) {
 			p = p->next;
 		}
-		if (p != tmp) {
-			p->next = tmp;
+		if (p != NULL && p != tmp) p->next = tmp;
+		if (Opt_header == NULL) {
+			Opt_header = tmp;
 		}
 
 		/* printf("Susseed\n" */
@@ -339,95 +325,99 @@ static Arg set(Arg format)
 		/*        "Var:  %s\n", */
 		/*        tmp->name, tmp->data); */
 	}
-	format.num = 0;
-	return format;
+	return NULL;
 }
 
 /*
  * 打印值
  */
-static Arg print(Arg format)
+static void *print(void *format)
 {
 	struct Opt *p = Opt_header;
 	if (p == NULL) {
-		format.num = -1;
-		return format;
+		printf("No var\n");
+		ret_val = -1;
+		return &ret_val;
 	}
 	while (p != NULL) {
-		if (strcmp(p->name, format.ch) == 0) {
+		if (strcmp(p->name, format) == 0) {
 			printf("Name: %s\n"
 			       "Var:  %s\n",
 			       p->name, p->data);
-			format.num = 0;
-			return format;
+			ret_val = 0;
+			return &ret_val;
 		}
 		p = p->next;
 	}
 	if (p == NULL) {
 		printf("没有这个变量！\n");
 	}
-	format.num = 0;
-	return format;
+	ret_val = 0;
+	return &ret_val;
 }
 
 /*
  * 获取变量
  */
-static Arg get(Arg result)
+static void *get(void *result)
 {
 	struct Opt *p = Opt_header;
 	if (p == NULL) {
-		result.num = -1;
-		return result;
+		printf("No var\n");
+		ret_val = -1;
+		return &ret_val;
 	}
 	while (p != NULL) {
-		if (strcmp(p->name, result.ch) == 0) {
-			result.ch = p->data;
+		if (strcmp(p->name, result) == 0) {
+			result = p->data;
 			return result;
 		}
 		p = p->next;
 	}
 	if (p == NULL) {
-		result.ch = NULL;
-		return result;
+		return NULL;
 	}
-	result.ch = NULL;
-	return result;
+	return NULL;
 }
 
 
 /*
  * 列出所有的变量列表
  */
-static Arg list(Arg type)
+static void *list(void *type)
 {
 	struct Opt *p = Opt_header;
 
 	if (p == NULL) {
-		type.num = -1;
-		return type;
+		printf("No var\n");
+		ret_val = -1;
+		return &ret_val;
 	}
 
 	while (p != NULL) {
-		switch (type.ch[0]) {
-		case '1': {
+		switch (type ? ((char*)type)[0] : '0') {
+		case '1':
 			printf("\033[1;33m--------------------\033[0m\n"
 			       "Name: %s\n"
 			       "Var:  %s\n"
 			       "\033[1;33m--------------------\033[0m\n",
 			       p->name, p->data);
 			break;
-		}
+		case 'h':
+			printf("usage: list [1] [h]\n"
+			       "options:\n"
+			       "     1 使用分割线\n"
+			       "     h 显示此内容\n");
+			return type;
+			break;
 		default:
 			printf("Name: %s\n"
 			       "Var:  %s\n",
 			       p->name, p->data);
 			break;
 		}
-
 		p = p->next;
 	}
-	type.num = 0;
 	return type;
 }
 
@@ -435,20 +425,22 @@ static Arg list(Arg type)
 /*
  * 保存变量
  */
-static Arg csave(Arg type)
+static void *csave(void *type)
 {
 	struct Opt *p = Opt_header;
 	FILE *fp = NULL;
 
-	if (p == NULL || type.ch == NULL) {
-		type.num = -1;
-		return type;
+	if (p == NULL || type == NULL) {
+		printf("请指定文件名！\n");
+		ret_val = -2;
+		return &ret_val;
 	}
 
-	fp = fopen(type.ch, "w");
+	fp = fopen(type, "w");
 	if (!fp) {
-		type.num = -2;
-		return type;
+		printf("打开文件失败！\n");
+		ret_val = -3;
+		return &ret_val;
 	}
 
 	while (p != NULL) {
@@ -457,36 +449,39 @@ static Arg csave(Arg type)
 		p = p->next;
 	}
 	fclose(fp);
-	type.num = 0;
-	return type;
+	ret_val = 0;
+	return &ret_val;
 }
 
 /*
  * 读取变量
  */
-static Arg cread(Arg type)
+static void *cread(void *type)
 {
 	FILE *fp = NULL;
 
-	if (type.ch == NULL) {
-		type.num = -1;
-		return type;
+	if (type == NULL) {
+		printf("请指定文件名！\n");
+		ret_val = -2;
+		return &ret_val;
 	}
 
-	fp = fopen(type.ch, "r");
+	fp = fopen(type, "r");
 	if (!fp) {
-		type.num = -2;
-		return type;
+		printf("打开文件失败！\n");
+		ret_val = -3;
+		return &ret_val;
 	}
 
 	char cmd[CMD_MAX_LEN] = "\0";
 	char cmd2[CMD_MAX_LEN + 4] = "\0";
 	while (fgets(cmd, CMD_MAX_LEN, fp) != NULL) {
+		cmd[strlen(cmd) - 1] = '\0';
 		sprintf(cmd2, "set %s", cmd);
 		cmd_run(cmd2);
 	}
 	fclose(fp);
-	type.num = 0;
-	return type;
+	ret_val = 0;
+	return &ret_val;
 }
 
