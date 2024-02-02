@@ -32,6 +32,7 @@ struct VAULE {
 struct ctools_CONFIG Config = { NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL };
 struct VAULE value = { 0, NULL, NULL };
 enum TK_ctools_CONFIG { TK_TAG = 0, TK_ASSIGNMENT, TK_SEMICOLON, TK_STRING, TK_NUM, TK_FILE_EOF, TK_ERROR };
+const static char TK_list[7][12] = {"TAG", "ASSIGNMENT", "SEMICLON", "STRING", "NUM", "FILE EOF", "ERROR"};
 
 #define CURS (Config.curs)
 
@@ -156,8 +157,10 @@ static int getToken(void)
 			++CURS;
 			if (*CURS == '\n' || *CURS == '\0') {
 				value.end = value.begin;
-				printf("%s:%d:%s", Config.filename, Config.line, "expect \" \n");
 				token = TK_ERROR;
+				printf("%s:%d:expect \"(second),token '%s',str '%s'\n",
+				       Config.filename, Config.line, TK_list[token],
+				       value.begin);
 				break;
 			} else if (*CURS == '"') {
 				value.end = CURS;
@@ -228,21 +231,22 @@ static struct ctools_CONFIG_NODE *runner()
 
 		token = getToken();
 		if (token != TK_ASSIGNMENT) {	/* 等于号 */
-			printf("%s:%d:%s", Config.filename, Config.line, "expect = \n");
+			printf("%s:%d:expect `=`,token '%s'\n",
+			       Config.filename, Config.line, TK_list[token]);
 			goto EXIT;
 		}
 
 		type = token = getToken();
 		if (token != TK_NUM && token != TK_STRING) {	/* 赋值内容 */
-			printf("%s:%d:%s", Config.filename,
-			       Config.line, "expect num or string \n");
+			printf("%s:%d:expect `num` or `string`,token '%s'\n",
+			       Config.filename, Config.line, TK_list[token]);
 			goto EXIT;
 		}
 
 		token = getToken();
 		if (token != TK_SEMICOLON) {	/* 分号 */
-			printf("%s:%d:%s",
-			       Config.filename, Config.line, "expect ; \n");
+			printf("%s:%d:expect `;`,token '%s'\n",
+			       Config.filename, Config.line, TK_list[token]);
 			goto EXIT;
 		}
 		// 运行函数
