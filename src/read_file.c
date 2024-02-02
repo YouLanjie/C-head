@@ -8,17 +8,16 @@
  *
  */
 
-
 #include "include.h"
 
 struct ctools_CONFIG {
-	char *filename;    /* 文件名称 */
-	FILE *file;        /* 文件 */
-	char *base;        /* 全部数据 */
-	char *curs;        /* 光标 */
-	char *lineHead;    /* 行头 */
-	long  size;        /* 文件大小 */
-	int   line;        /* 报错用行数 */
+	char *filename;		/* 文件名称 */
+	FILE *file;		/* 文件 */
+	char *base;		/* 全部数据 */
+	char *curs;		/* 光标 */
+	char *lineHead;		/* 行头 */
+	long  size;		/* 文件大小 */
+	int   line;		/* 报错用行数 */
 
 	struct ctools_CONFIG_NODE *node;
 	struct ctools_CONFIG_NODE *curs_node;
@@ -31,8 +30,8 @@ struct VAULE {
 };
 
 struct ctools_CONFIG Config = { NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL };
-struct VAULE value = { 0, NULL, NULL};
-enum TK_ctools_CONFIG{TK_TAG=0, TK_ASSIGNMENT,TK_SEMICOLON,TK_STRING,TK_NUM,TK_FILE_EOF,TK_ERROR};
+struct VAULE value = { 0, NULL, NULL };
+enum TK_ctools_CONFIG { TK_TAG = 0, TK_ASSIGNMENT, TK_SEMICOLON, TK_STRING, TK_NUM, TK_FILE_EOF, TK_ERROR };
 
 #define CURS (Config.curs)
 
@@ -40,14 +39,14 @@ enum TK_ctools_CONFIG{TK_TAG=0, TK_ASSIGNMENT,TK_SEMICOLON,TK_STRING,TK_NUM,TK_F
 #define IsNonDigit(c) ( (c >= 'a' && c <= 'z') || (c == '_') || (c >= 'A' && c <= 'Z') )
 #define IsLetterOrDigit(c) ( IsDigit(c) || IsNonDigit(c) )
 
-
 /*
  * 读取文件
  */
-static char * read_file(char *filename)
+static char *read_file(char *filename)
 {
 	Config.file = fopen(filename, "r");
-	if (!Config.file) return NULL;
+	if (!Config.file)
+		return NULL;
 
 	fseek(Config.file, 0L, SEEK_END);
 	Config.size = ftell(Config.file);
@@ -118,7 +117,9 @@ static int getToken(void)
 			curs->next = NULL;
 		}
 		while (curs != NULL && curs->next != NULL) {
-			if (curs->name != NULL && (CURS - start) == (long)strlen(curs->name) && strncmp(start, curs->name, CURS - start)==0) {
+			if (curs->name != NULL
+			    && (CURS - start) == (long)strlen(curs->name)
+			    && strncmp(start, curs->name, CURS - start) == 0) {
 				Config.curs_node = curs;
 				token = TK_TAG;
 				goto GET_TOKEN_EXIT;
@@ -133,10 +134,10 @@ static int getToken(void)
 				goto GET_TOKEN_EXIT;
 			}
 		}
-		curs->name = malloc(sizeof(char)*(CURS - start + 1));
+		curs->name = malloc(sizeof(char) * (CURS - start + 1));
 		int i = 0;
-		for(i = 0; i < (CURS - start); ++i) {
-				curs->name[i] = *(start+i);
+		for (i = 0; i < (CURS - start); ++i) {
+			curs->name[i] = *(start + i);
 		}
 		curs->name[i] = '\0';
 		curs->type = 0;
@@ -172,7 +173,7 @@ static int getToken(void)
 		while (IsDigit(*CURS)) {
 			++CURS;
 		}
-		
+
 		if (*CURS == '.') {
 			++CURS;
 			while (IsDigit(*CURS)) {
@@ -219,44 +220,44 @@ static struct ctools_CONFIG_NODE *runner()
 
 	if (CURS == NULL)
 		return NULL;
+ EXIT:
 	while (token != TK_FILE_EOF) {
 		token = getToken();
-		if (token == TK_TAG) {
-			token = getToken();
-			if (token == TK_ASSIGNMENT) {
-				type = token = getToken();
-				if (token == TK_NUM || token == TK_STRING) {
-					token = getToken();
-					if (token != TK_SEMICOLON) {
-						printf("%s:%d:%s",
-							 Config.filename, Config.line,
-							 "expect ; \n");
-					} else {
-						// 运行函数
-						if (type == TK_NUM) {
-							Config.curs_node->type = 1;
-							Config.curs_node->num = value.num;
-						} else if (type == TK_STRING) {
-							Config.curs_node->type = 2;
-							Config.curs_node->ch = malloc(sizeof(char)*(value.end - value.begin));
-							strncpy(Config.curs_node->ch, (value.begin + 1), value.end - (value.begin + 1));
-							Config.curs_node->ch[value.end - (value.begin + 1)] = '\0';
-						}
-					}
-				} else {
-					printf("%s:%d:%s", Config.filename,
-						 Config.line,
-						 "expect num or string \n");
-				}
-			} else {
-				printf("%s:%d:%s", Config.filename, Config.line,
-					 "expect = \n");
-			}
+		if (token != TK_TAG)	/* 变量(tag)名称 */
+			goto EXIT;
+
+		token = getToken();
+		if (token != TK_ASSIGNMENT) {	/* 等于号 */
+			printf("%s:%d:%s", Config.filename, Config.line, "expect = \n");
+			goto EXIT;
+		}
+
+		type = token = getToken();
+		if (token != TK_NUM && token != TK_STRING) {	/* 赋值内容 */
+			printf("%s:%d:%s", Config.filename,
+			       Config.line, "expect num or string \n");
+			goto EXIT;
+		}
+
+		token = getToken();
+		if (token != TK_SEMICOLON) {	/* 分号 */
+			printf("%s:%d:%s",
+			       Config.filename, Config.line, "expect ; \n");
+			goto EXIT;
+		}
+		// 运行函数
+		if (type == TK_NUM) {
+			Config.curs_node->type = 1;
+			Config.curs_node->num = value.num;
+		} else if (type == TK_STRING) {
+			Config.curs_node->type = 2;
+			Config.curs_node->ch = malloc(sizeof(char) * (value.end - value.begin));
+			strncpy(Config.curs_node->ch, (value.begin + 1), value.end - (value.begin + 1));
+			Config.curs_node->ch[value.end - (value.begin + 1)] = '\0';
 		}
 	}
 	return Config.node;
 }
-
 
 /*
  * 入口 by filename
@@ -283,32 +284,42 @@ static struct ctools_CONFIG_NODE *run_by_char(char *data)
 
 static char *rt_name(struct ctools_CONFIG_NODE *data)
 {
-	if (data != NULL) return data->name;
-	else return NULL;
+	if (data != NULL)
+		return data->name;
+	else
+		return NULL;
 }
 
 static char *rt_str(struct ctools_CONFIG_NODE *data)
 {
-	if (data != NULL) return data->ch;
-	else return NULL;
+	if (data != NULL)
+		return data->ch;
+	else
+		return NULL;
 }
 
 static int rt_num(struct ctools_CONFIG_NODE *data)
 {
-	if (data != NULL) return data->num;
-	else return 0;
+	if (data != NULL)
+		return data->num;
+	else
+		return 0;
 }
 
 static int rt_type(struct ctools_CONFIG_NODE *data)
 {
-	if (data != NULL) return data->type;
-	else return 0;
+	if (data != NULL)
+		return data->type;
+	else
+		return 0;
 }
 
-static struct ctools_CONFIG_NODE *rt_next(struct ctools_CONFIG_NODE* data)
+static struct ctools_CONFIG_NODE *rt_next(struct ctools_CONFIG_NODE *data)
 {
-	if (data != NULL) return data->next;
-	else return NULL;
+	if (data != NULL)
+		return data->next;
+	else
+		return NULL;
 }
 
 const ctools_config CT_CONF = {
@@ -321,4 +332,3 @@ const ctools_config CT_CONF = {
 	.get_num = rt_num,
 	.get_next_node = rt_next,
 };
-
