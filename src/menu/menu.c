@@ -9,23 +9,27 @@ static void set_title(Data*, char*);
 /* 设置类型 */
 static void set_type(Data*, char*);
 /* 显示菜单 */
-static int Show(Data*);
+static int show(Data*);
 /* 获得输入 */
 static int Input(int*, int*, int*, int, int);
 
 extern struct display display;
 
-const ctools_menu CT_MENU = {
-	.ncurses_init  = ncurses_init,
-	.data_init     = data_init,
-	.set_title     = set_title,
-	.set_type      = set_type,
-	.set_text      = set_text,
-	.add_text      = add_text,
-	.set_text_data = set_text_data,
-	.add_text_data = add_text_data,
-	.show          = Show,
-};
+const struct ctools_menu ctools_menu_init()
+{
+	const struct ctools_menu menu = {
+		.ncurses_init  = ncurses_init,
+		.data_init     = data_init,
+		.set_title     = set_title,
+		.set_type      = set_type,
+		.set_text      = set_text,
+		.add_text      = add_text,
+		.set_text_data = set_text_data,
+		.add_text_data = add_text_data,
+		.show          = show,
+	};
+	return menu;
+}
 
 /* ctools_menu_Init
  * 初始化ncurse
@@ -33,23 +37,7 @@ const ctools_menu CT_MENU = {
  */
 static void ncurses_init()
 {
-	setlocale(LC_ALL, "zh_CN.UTF8");
-	initscr();
-	cbreak();    /* 取消行缓冲 */
-	noecho();    /* 不回显 */
-	curs_set(0);    /* 隐藏光标 */
-	if (has_colors() == FALSE) {
-		endwin();
-		exit(-1);
-	}
-	start_color();
-	/* 初始化颜色对 */
-	/*       颜色对           字色（表）   底色（背景） */
-	init_pair(C_WHITE_BLUE,   COLOR_WHITE, COLOR_BLUE);      /* 蓝底白字 */
-	init_pair(C_BLUE_WHITE,   COLOR_BLUE,  COLOR_WHITE);     /* 白底蓝字 */
-	init_pair(C_WHITE_YELLOW, COLOR_WHITE, COLOR_YELLOW);    /* 黄底白字 */
-	init_pair(C_BLACK_WHITE,  COLOR_BLACK, COLOR_WHITE);     /* 白底黑字 */
-	init_pair(C_WHITE_BLACK,  COLOR_WHITE, COLOR_BLACK);     /* 黑底白字 */
+	ctools_ncurses_init();
 	return;
 }
 
@@ -116,7 +104,7 @@ static void set_type(Data *data, char *type)
 }
 
 /* 显示 */
-static int Show(Data * data)
+static int show(Data * data)
 {
 	int input = 1,		        /* 保存输入 */
 	    focus_text = 1,             /* 保存焦点选项的数字 */

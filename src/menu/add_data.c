@@ -119,7 +119,11 @@ extern void set_text_data(Data * data, char *type, char * format, ...)
 			if (S("describe")) {
 				pNew->describe = va_arg(text, char *);
 			} else if (S("type")) {
-				pNew->cfg = va_arg(text, int);
+				char *ch = va_arg(text, char *);
+				if (strcmp(ch, "number"))
+					pNew->cfg = 2;
+				else if (strcmp(ch, "button"))
+					pNew->cfg = 1;
 			} else if (S("var")) {
 				pNew->var = va_arg(text, int *);
 			} else if (S("foot")) {

@@ -1,5 +1,9 @@
 #include "include.h"
 
+#define Clear_TER printf("\033[2J")
+#define Clear_SYS system("clear")
+#define Gotoxy_TER(x,y) printf("\033[%d;%dH",x, y)
+
 int ctools_old_menu(char *title, char *text[], int tl, int list)
 { /* 菜单程序 */
 #ifdef __linux
@@ -17,10 +21,8 @@ int ctools_old_menu(char *title, char *text[], int tl, int list)
 
 	while (input != 0x30 && input != 0x1B) {
 		Clear_TER;
-#ifdef __linux
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 		winSizeCol = size.ws_col;
-#endif
 
 #ifdef __linux
 		printf("\033[5;%dH\033[0;2;34m--------------------------------------------------------", winSizeCol / 2 - 27);

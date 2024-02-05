@@ -326,13 +326,18 @@ static struct ctools_CONFIG_NODE *rt_next(struct ctools_CONFIG_NODE *data)
 		return NULL;
 }
 
-const ctools_config CT_CONF = {
-	.readfile = read_file,
-	.run_file = run_by_filename,
-	.run_char = run_by_char,
-	.get_name = rt_name,
-	.get_type = rt_type,
-	.get_str = rt_str,
-	.get_num = rt_num,
-	.get_next_node = rt_next,
-};
+
+const struct ctools_config ctools_config_init()
+{
+	const struct ctools_config config = {
+		.readfile = read_file,
+		.run_file = run_by_filename,
+		.run_char = run_by_char,
+		.get_name = rt_name,
+		.get_type = rt_type,
+		.get_str = rt_str,
+		.get_num = rt_num,
+		.get_next_node = rt_next,
+	};
+	return config;
+}

@@ -49,12 +49,6 @@ extern void add_text_data(Data*, char*, char*);
 extern void get_focus(Data*, int);
 
 // 定义宏
-#define C_WHITE_BLUE   252
-#define C_BLUE_WHITE   253
-#define C_WHITE_YELLOW 254
-#define C_BLACK_WHITE  255
-#define C_WHITE_BLACK  256
-
 #define LineH "─"
 #define LineV "│"
 #define LineLU "┌"

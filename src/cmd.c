@@ -28,14 +28,19 @@ static int cmd_input(char*);
 static void * cmd_run(char *command);
 /* 运行默认提供的tui交互界面 */
 static int cmd_tui(void);
-const ctools_cmd CT_CMD = {
-	.cmd_list_set = cmd_list_set,
-	.input        = cmd_input,
-	.run          = cmd_run,
-	.ui           = cmd_tui,
-	.cmd_max_len  = CMD_MAX_LEN,
-	.arg_max_len  = ARG_MAX_LEN,
-};
+
+const struct ctools_cmd ctools_cmd_init()
+{
+	const struct ctools_cmd cmd = {
+		.cmd_list_set = cmd_list_set,
+		.input        = cmd_input,
+		.run          = cmd_run,
+		.ui           = cmd_tui,
+		.cmd_max_len  = CMD_MAX_LEN,
+		.arg_max_len  = ARG_MAX_LEN,
+	};
+	return cmd;
+}
 
 static void *help();
 static void *quit();
