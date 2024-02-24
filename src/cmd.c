@@ -167,11 +167,14 @@ static void *cmd_run(char *command)
 
 	if (command == NULL) return NULL;
 
+	char *cmdtmp = malloc(sizeof(char)*(strlen(command) + 1));
+	if (cmdtmp == NULL) return NULL;
+	strcpy(cmdtmp, command);
 	/* 分离字符串和参数 */
-	for (cmd = command; command != NULL && *command != '\0' && *command != ' '; command++);
-	if (command != NULL && *command != '\0') {
-		*command = '\0';
-		arg = command + 1;
+	for (cmd = cmdtmp; cmdtmp != NULL && *cmdtmp != '\0' && *cmdtmp != ' '; cmdtmp++);
+	if (cmdtmp != NULL && *cmdtmp != '\0') {
+		*cmdtmp = '\0';
+		arg = cmdtmp + 1;
 	}
 	ctools_cmd_list * tmp = Cmd_List;
 	while (tmp != NULL) {
@@ -197,6 +200,7 @@ static void *cmd_run(char *command)
 			tmp = tmp->next;
 		}
 	}
+	free(cmd);
 	if (tmp == NULL) {
 		ret_val = -1;
 		return &ret_val;
