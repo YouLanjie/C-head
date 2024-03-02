@@ -3,17 +3,15 @@
 /* 初始化ncurse，设置语言、颜色对 */
 static void ncurses_init();
 /* 初始化变量 */
-static void data_init(Data**);
+static void data_init(Menu**);
 /* 设置标题 */
-static void set_title(Data*, char*);
+static void set_title(Menu*, char*);
 /* 设置类型 */
-static void set_type(Data*, char*);
+static void set_type(Menu*, char*);
 /* 显示菜单 */
-static int show(Data*);
+static int show(Menu*);
 /* 获得输入 */
-static int Input(int*, int*, int*, int, int);
-
-extern struct display display;
+static int Input(int, int*, int*, int, int);
 
 const struct ctools_menu ctools_menu_init()
 {
@@ -22,10 +20,8 @@ const struct ctools_menu ctools_menu_init()
 		.data_init     = data_init,
 		.set_title     = set_title,
 		.set_type      = set_type,
-		.set_text      = set_text,
 		.add_text      = add_text,
-		.set_text_data = set_text_data,
-		.add_text_data = add_text_data,
+		.del_text      = del_text,
 		.show          = show,
 	};
 	return menu;
@@ -44,140 +40,133 @@ static void ncurses_init()
 /* ctools_menu_t_init
  * 初始化变量
  */
-static void data_init(Data ** tmp)
+static void data_init(Menu ** tmp)
 {
-	*tmp = (Data *)malloc(sizeof(Data));
+	*tmp = (Menu *)malloc(sizeof(Menu));
 	(*tmp) -> title = NULL;
 	(*tmp) -> text  = NULL;
 	(*tmp) -> focus = NULL;
-	(*tmp) -> cfg   = 0;
+	(*tmp) -> type  = 0;
 	return;
 }
 
 /* 移动焦点选项 */
-extern void get_focus(Data * data, int number)
+extern void set_focus(Menu * menu, int id)
 {
-	if (data->focus == NULL) {
-		data->focus = data->text;
+	if (menu->focus == NULL) {
+		menu->focus = menu->text;
+		if (menu->focus == NULL)
+			return;
 	}
-	if (number <= 0) {
-		while (data->focus->nextText != NULL) {
-			data->focus = data->focus->nextText;
+	if (id <= 0) {
+		while (menu->focus->next != NULL) {
+			menu->focus = menu->focus->next;
 		}
 		return;
 	}
-	if (data->focus->number > number) {
-		data->focus = data->text;
+	if (menu->focus->id > id) {
+		menu->focus = menu->text;
 	}
-	while (data->focus->nextText != NULL && data->focus->number < number) {
-		data->focus = data->focus->nextText;
+	while (menu->focus->next != NULL && menu->focus->id < id) {
+		menu->focus = menu->focus->next;
 	}
 	return;
 }
 
-static void set_title(Data *data, char *title)
+static void set_title(Menu *menu, char *title)
 {
 	char *t = NULL;
-	if (data == NULL || title == NULL || *title == '\0') return;
+	if (menu == NULL || title == NULL || *title == '\0') return;
 	t = (char*)malloc(strlen(title) + 1);
 	strcpy(t, title);
-	data->title = t;
+	menu->title = t;
 	return;
 }
 
-static void set_type(Data *data, char *type)
+static void set_type(Menu *menu, char *type)
 {
-	if (data == NULL || type == NULL || *type == '\0') return;
+	if (menu == NULL || type == NULL || *type == '\0') return;
 #define S(t) (strcmp(t, type) == 0)
 	if (S("normal"))
-		data->cfg = 0;
+		menu->type = 0;
 	else if (S("main_only"))
-		 data->cfg = 1;
+		 menu->type = 1;
 	else if (S("help"))
-		 data->cfg = 2;
+		 menu->type = 2;
 	else if (S("setting"))
-		 data->cfg = 3;
+		 menu->type = 3;
 	else if (S("help_only"))
-		 data->cfg = 4;
+		 menu->type = 4;
 #undef S
 	return;
 }
 
 /* 显示 */
-static int show(Data * data)
+static int show(Menu * menu)
 {
-	int input = 1,		        /* 保存输入 */
-	    focus_text = 1,             /* 保存焦点选项的数字 */
-	    focus_describe = 0,         /* 描述的焦点 */
-	    noShowText = 0,             /* 显示的内容与读取的偏差值（相当于屏幕上方隐藏的条目），用作实现界面滑动 */
-	    noShowText2 = 0,	        /* 偏差值的备份 */
-	    side = 0,                   /* 焦点位置 */
-	    height = 0,                 /* 显示区域高度（偏差值） */
-	    allDescribe = 0,            /* 保存所有的描述字符总行数（打印进度用） */
-	    allChose = 0;               /* 保存所有的选择总数（打印进度用） */
+	int input = 1,			/* 保存输入 */
+	    focus_id = 1,		/* 保存焦点选项的数字 */
+	    focus_id2 = 0,		/* 描述的焦点 */
+	    noShowText = 0,		/* 显示的内容与读取的偏差值（相当于屏幕上方隐藏的条目），用作实现界面滑动 */
+	    noShowText2 = 0,		/* 偏差值的备份 */
+	    side = 0,			/* 焦点位置 */
+	    height = 0,			/* 显示区域高度（偏差值） */
+	    line_node = 0,		/* 保存所有的选择总数（打印进度用） */
+	    line_desc = 0;		/* 保存所有的描述字符总行数（打印进度用） */
 
 	/* 倘若焦点指针不为空，
 	 * 则获得焦点指针指向的文本数字编号
 	 */
-	if (data->focus != NULL)
-		focus_text = data->focus->number;
+	if (menu->focus != NULL)
+		focus_id = menu->focus->id;
 
 	/* 移动焦点指针到最后一条文本 */
-	get_focus(data, 0);
-	allChose = data->focus->number;
+	set_focus(menu, 0);
+	line_node = menu->focus->id;
 
 	/* 配置选项判断 */
-	if (data->cfg == 1) {
-		/* 仅显示正常屏幕框架 */
-		display.screen(data);
-		if (data->text != NULL) {
-			focus_text = 0;
-			/* 打印选项 */
-			display.text(data, focus_text, noShowText, allChose);
-			get_focus(data, 1);
-		}
-		return 0;
-	} else if (data->cfg == 4) {
-		/* 仅显示帮助屏幕框架 */
-		display.screen(data);
-		if (data->text != NULL) {
-			focus_text = 0;
-			display.help(data, focus_text, noShowText, &allChose);
-			get_focus(data, 1);
-		}
-		return 0;
+	if (menu->type == 1 || menu->type == 4) {
+		display.screen(menu);
+		if (menu->text == NULL)
+			return 0;
+		focus_id = 0;
+		/* 打印选项 */
+		if (menu->type == 1)
+			display.text(menu, focus_id, noShowText, line_node); /* 仅显示正常屏幕框架 */
+		else
+			display.help(menu, focus_id, noShowText, &line_node); /* 仅显示帮助屏幕框架 */
+		set_focus(menu, 1);
 	}
 
-	if (data->cfg == 2) height = 8;
+	if (menu->type == 2) height = 8;
 	else height = 10;
 
 	while (input != 0x30 && input != 0x1B) {
 		/* 显示屏幕框架 */
-		display.screen(data);
+		display.screen(menu);
 
 		/* 打印选项 */
-		if (data->cfg != 2)    /* 非帮助 */
-			display.describe(data, focus_text, focus_describe, noShowText2,
-					 &allDescribe);    /* 显示焦点选项的描述 */
-		if (data->cfg == 0)    /* 默认 */
-			display.text(data, focus_text, noShowText, allChose);
-		else if (data->cfg == 2)    /* 帮助 */
-			display.help(data, focus_text, noShowText, &allChose);
-		else if (data->cfg == 3)    /* 设置 */
-			display.setting(data, focus_text, noShowText, allChose);
+		if (menu->type != 2)    /* 非帮助 */
+			display.describe(menu, focus_id, focus_id2, noShowText2, &line_desc);    /* 显示焦点选项的描述 */
+		if (menu->type == 0)    /* 默认 */
+			display.text(menu, focus_id, noShowText, line_node);
+		else if (menu->type == 2)    /* 帮助 */
+			display.help(menu, focus_id, noShowText, &line_node);
+		else if (menu->type == 3)    /* 设置 */
+			display.setting(menu, focus_id, noShowText, line_node);
 
 		/* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
 		/* 移动焦点指针到焦点文本 */
-		get_focus(data, focus_text);
+		set_focus(menu, focus_id);
 
-		if (data->cfg != 2) {    /* 非帮助 */
+		if (menu->type != 2) {    /* 非帮助 */
 			if (side) {    /* 若焦点在描述内容上（side != 0） */
 				/* 打印描述的按键提示 */
 				attron(A_DIM);
 				attron(COLOR_PAIR(C_BLACK_WHITE));
 				move(7,         COLS / 4 * 3 - 4);printw("%sw k%s", ArrowUp, ArrowUp);
 				move(LINES - 2, COLS / 4 * 3 - 4);printw("%ss j%s", ArrowDn, ArrowDn);
-				move(LINES - 2, COLS - 7);printw("%02d/%02d", focus_describe, allDescribe);
+				move(LINES - 2, COLS - 7);printw("%02d/%02d", focus_id2, line_desc);
 				attroff(COLOR_PAIR(C_BLACK_WHITE));
 				attroff(A_DIM);
 
@@ -192,8 +181,8 @@ static int show(Data * data)
 				attron(COLOR_PAIR(C_WHITE_BLUE));
 				move(7,         COLS / 4 - 4);printw("%sw k%s", ArrowUp, ArrowUp);
 				move(LINES - 2, COLS / 4 - 4);printw("%ss j%s", ArrowDn, ArrowDn);
-				move(LINES - 2, COLS / 2 - 6);printw("%02d/%02d", focus_text, allChose);
-				if (data->focus->describe != NULL) {    /* 如果有描述 */
+				move(LINES - 2, COLS / 2 - 6);printw("%02d/%02d", focus_id, line_node);
+				if (menu->focus->describe != NULL) {    /* 如果有描述 */
 					move(5, COLS / 2 - 5);printw("TAB%s", ArrowRi);
 				}
 				attroff(A_BOLD);
@@ -204,71 +193,73 @@ static int show(Data * data)
 			attron(COLOR_PAIR(C_BLACK_WHITE));
 			move(5,         COLS / 2 - 4);printw("%sw k%s", ArrowUp, ArrowUp);
 			move(LINES - 2, COLS / 2 - 4);printw("%ss j%s", ArrowDn, ArrowDn);
-			move(LINES - 2, COLS - 7);printw("%02d/%02d", focus_text, allChose);
+			move(LINES - 2, COLS - 7);printw("%02d/%02d", focus_id, line_node);
 			attroff(COLOR_PAIR(C_BLACK_WHITE));
 		}
 		refresh();
 		input = getch();
 		/* 输入判断 */
 		if (!side)
-			input = Input(&input, &focus_text, &noShowText, allChose, height);
+			input = Input(input, &focus_id, &noShowText, line_node, height);
 		else {
-			input = Input(&input, &focus_describe, &noShowText2, allDescribe, height);
+			input = Input(input, &focus_id2, &noShowText2, line_desc, height);
 			if (input == '0') {
 				input = '\t';
 			}
 		}
 		switch (input) {
 		case '\n':	/* 返回字符 */
-			if (data->cfg == 3 && data->focus->cfg == 2
-			    && data->focus->var != NULL) {
-				if (!*(data->focus->var))
-					*(data->focus->var) = 1;
+			if (menu->type == 3 && menu->focus->type == 2
+			    && menu->focus->var != NULL) {
+				if (!*(menu->focus->var))
+					*(menu->focus->var) = 1;
 				else
-					*(data->focus->var) = 0;
-			} else if (data->cfg == 0) {
+					*(menu->focus->var) = 0;
+			} else if (menu->type == 0) {
 				/* clear(); */
 				/* char output[10];	/\* 仅用作字符输出 *\/ */
 				/* sprintf(output, "%d", focus_text); */
-				return focus_text;    /* 输出所选数字 */
+				if (menu->focus->function != NULL)
+					menu->focus->function();
+				return focus_id;    /* 输出所选数字 */
 			}
 			break;
 		case '+':
-			if (data->cfg == 3 && data->focus->cfg == 1
-			    && data->focus->var != NULL) {
-				if ((*data->focus->var) + data->focus->foot >
-				    data->focus->max)
-					(*data->focus->var) = data->focus->min;
+			if (menu->type == 3 && menu->focus->type == 1
+			    && menu->focus->var != NULL) {
+				if ((*menu->focus->var) + menu->focus->foot >
+				    menu->focus->max)
+					(*menu->focus->var) = menu->focus->min;
 				else
-					(*data->focus->var) += data->focus->foot;
+					(*menu->focus->var) += menu->focus->foot;
 			}
 			break;
 		case '-':
-			if (data->cfg == 3 && data->focus->cfg == 1
-			    && data->focus->var != NULL) {
-				if ((*data->focus->var) - data->focus->foot <
-				    data->focus->min)
-					(*data->focus->var) = data->focus->max;
+			if (menu->type == 3 && menu->focus->type == 1
+			    && menu->focus->var != NULL) {
+				if ((*menu->focus->var) - menu->focus->foot <
+				    menu->focus->min)
+					(*menu->focus->var) = menu->focus->max;
 				else
-					(*data->focus->var) -= data->focus->foot;
+					(*menu->focus->var) -= menu->focus->foot;
 			}
 			break;
 		case 0:	/* 什么都不做 */
 			break;
 		case '\t':	/* 切换介绍与选项 */
-			if (data->focus->describe != NULL) {
+			if (menu->focus->describe != NULL) {
 				if (!side) {    /* 在选项 */
 					side = 1;
-					focus_describe = 1;
+					focus_id2 = 1;
 				} else {    /* 在描述 */
 					side = 0;
-					focus_describe = 0;
+					focus_id2 = 0;
 					noShowText2 = 0;
 				}
 			}
 			break;
 		default:	/* 返回输入的字符 */
-			if (data->cfg == 0) {
+			if (menu->type == 0) {
 				if (input >= '0' && input <= '9') {
 					input-=48;
 				}
@@ -281,14 +272,15 @@ static int show(Data * data)
 }
 
 /* 处理输入 */
-static int Input(int *input, int *focus, int *noShowText, int allChose, int height)
+static int Input(int input, int *focus, int *noShowText, int allChose, int height)
 {
-	switch (*input) {
+	input = (input > 'a' && input < 'z') ? input - 32 : input;
+	switch (input) {
 	case 0x1B:
 		if (ctools_kbhit() != 0) {
 			getchar();
-			*input = getchar();
-			switch (*input) {
+			input = getchar();
+			switch (input) {
 			case 'A':
 			case 'D':
 				goto LABEL_LAST;
@@ -303,13 +295,9 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 			return '0';
 		}
 		break;
-	case 'd':
 	case 'D':
-	case 'l':
 	case 'L':
-	case 's':
 	case 'S':
-	case 'j':
 	case 'J':
 	LABEL_NEXT:
 		if (*focus < allChose) {
@@ -334,13 +322,9 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 		while (*focus - *noShowText > LINES - 10)
 			(*noShowText)++;
 		break;
-	case 'a':
 	case 'A':
-	case 'h':
 	case 'H':
-	case 'w':
 	case 'W':
-	case 'k':
 	case 'K':
 	LABEL_LAST:
 		if (*focus > 1) {
@@ -372,7 +356,7 @@ static int Input(int *input, int *focus, int *noShowText, int allChose, int heig
 		return '\t';
 		break;
 	default:
-		return *input;
+		return input;
 		break;
 	}
 	clear();

@@ -13,40 +13,38 @@
 
 #include "../include.h"
 
-struct Data {
-	char        * text;         /* 条例内容 */
-	char        * describe;     /* 描述/帮助信息 */
-	void       (* function)();  /* 调用的函数 */
-	int         * var;          /* 调整的变量值 */
-	int           number;       /* 编号 */
-	int           cfg;          /* 类型：1数值，2开关 */
-	int           foot;         /* 设置的步长 */
-	int           max;          /* 设置的最大值 */
-	int           min;          /* 设置的最小值 */
-	struct Data * nextText;     /* 下一条例（链表） */
-};                                  /* 条例结构体 */
+typedef struct Node {
+	char        * text;		/* 条例内容 */
+	char        * describe;		/* 描述/帮助信息 */
+	void       (* function)();	/* 调用的函数 */
+	int         * var;		/* 调整的变量值 */
+	int           id;		/* 编号 */
+	int           type;		/* 类型：1数值，2开关 */
+	int           foot;		/* 设置的步长 */
+	int           max;		/* 设置的最大值 */
+	int           min;		/* 设置的最小值 */
+	struct Node * next;		/* 下一条例（链表） */
+} Node;					/* 条例结构体 */
 
 typedef struct ctools_menu_t {
-	char        * title;    /* 标题 */
-	struct Data * text;     /* 条例链表头 */
-	struct Data * focus;    /* 选中的条例 */
-	int           cfg;      /* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
-} Data;                         /* 菜单类/结构体 */
+	char * title;	/* 标题 */
+	Node * text;	/* 条例链表头 */
+	Node * focus;	/* 选中的条例 */
+	int    type;	/* 菜单类型: 0.默认 1.仅显示主界面 2.显示帮助 3.显示设置 4.仅显示帮助，无输入处理 */
+} Menu;			/* 菜单类/结构体 */
 
 struct display {
-	void (*const screen)(Data*);
-	void (*const text)(Data*, int, int, int);
-	void (*const describe)(Data*, int, int, int, int*);
-	void (*const help)(Data*, int, int, int*);
-	void (*const setting)(Data*, int, int, int);
-	/* void (*screen)(); */
+	void (*const screen)(Menu*);
+	void (*const text)(Menu*, int, int, int);
+	void (*const describe)(Menu*, int, int, int, int*);
+	void (*const help)(Menu*, int, int, int*);
+	void (*const setting)(Menu*, int, int, int);
 };
+extern struct display display;
 
-extern void set_text(Data *, ...);
-extern void add_text(Data *, char*);
-extern void set_text_data(Data*, char*, char*, ...);
-extern void add_text_data(Data*, char*, char*);
-extern void get_focus(Data*, int);
+extern void add_text(Menu * menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min);
+extern void del_text(Menu * menu, int id);
+extern void set_focus(Menu *, int);
 
 // 定义宏
 #define LineH "─"

@@ -11,11 +11,11 @@
 
 #include "./menu.h"
 
-static void Screen(Data*);
-static void Text(Data*, int, int, int);
-static void Describe(Data*, int, int, int, int* );
-static void Help(Data*, int, int, int*);
-static void Setting(Data*, int, int, int);
+static void Screen(Menu*);
+static void Text(Menu*, int, int, int);
+static void Describe(Menu*, int, int, int, int* );
+static void Help(Menu*, int, int, int*);
+static void Setting(Menu*, int, int, int);
 
 struct display display = {
 	.screen   = Screen,
@@ -37,7 +37,7 @@ static void fill(int y1, int x1, int y2, int x2)
 }
 
 /* 绘制屏幕 */
-static void Screen(Data * data)
+static void Screen(Menu * data)
 {
 	if (data == NULL) {
 		return;
@@ -50,18 +50,18 @@ static void Screen(Data * data)
 	for (int i = 1; i < COLS; i++) {
 		mvaddstr(4, i, LineH);	/* 第二横线 */
 		mvaddstr(LINES - 1, i, LineH);	/* 第三横线 */
-		if (data->cfg == 0 || data->cfg == 3)
+		if (data->type == 0 || data->type == 3)
 			mvaddstr(6, i, LineH);	/* 第四横线 */
 		
 	}
-	if (data->cfg == 0 || data->cfg == 3) {
+	if (data->type == 0 || data->type == 3) {
 		mvaddstr(5, COLS / 4 - 3, "选项");
 		mvaddstr(5, COLS / 4 * 3 - 3, "描述");
 	}
 	for (int i = 1; i < LINES; i++) {
 		mvaddstr(i, 0, LineV);	        /* 左垂线 */
 		mvaddstr(i, COLS - 1, LineV);	/* 右垂线 */
-		if (i >= 5 && (data->cfg == 0 || data->cfg == 3))
+		if (i >= 5 && (data->type == 0 || data->type == 3))
 			mvaddstr(i, COLS / 2 - 1, LineV);	/* 中垂线 */
 	}
 	mvaddstr(LINES - 1, 0       , LineLD);    /*   左下角   */
@@ -69,7 +69,7 @@ static void Screen(Data * data)
 	mvaddstr(0        , COLS - 1, LineRU);    /*   右上角   */
 	mvaddstr(4        , 0       , LineLC);    /* 左第一连接 */
 	mvaddstr(4        , COLS - 1, LineRC);    /* 右第一连接 */
-	if (data->cfg == 0 || data->cfg == 3) {
+	if (data->type == 0 || data->type == 3) {
 		mvaddstr(4        , COLS / 2 - 1, LineUC);    /* 中第一连接!1&2 */
 		mvaddstr(LINES - 1, COLS / 2 - 1, LineDC);    /* 中第二连接!1&2 */
 		mvaddstr(6        , 0           , LineLC);    /* 左第二连接!1&2 */
@@ -87,7 +87,7 @@ static void Screen(Data * data)
 }
 
 /* 显示选项 */
-static void Text(Data * data, int focus, int noShowText, int allChose)
+static void Text(Menu * data, int focus, int noShowText, int allChose)
 {
 	if (data == NULL) {
 		return;
@@ -103,7 +103,7 @@ static void Text(Data * data, int focus, int noShowText, int allChose)
 	     ) {
 		if (i <= noShowText)
 			continue;
-		get_focus(data, i);
+		set_focus(data, i);
 		if (i != focus) {
 			attron(COLOR_PAIR(C_WHITE_BLUE));
 			attroff(A_BOLD);
@@ -121,9 +121,9 @@ static void Text(Data * data, int focus, int noShowText, int allChose)
 	return;
 }
 
-static int line(int *width, char **ch, int *line_num, int *zhStat, int focus, int *stat, int noShowText, int cfg, int num) {
-	if ((*width >= COLS / cfg - 5 && **ch != '\0' && *zhStat == 1)
-	    || (*width >= COLS / cfg - 6 && **ch != '\0' && *zhStat == 2)
+static int line(int *width, char **ch, int *line_num, int *zhStat, int focus, int *stat, int noShowText, int type, int num) {
+	if ((*width >= COLS / type - 5 && **ch != '\0' && *zhStat == 1)
+	    || (*width >= COLS / type - 6 && **ch != '\0' && *zhStat == 2)
 	    || **ch == '\n' || **ch == '\r') {
 		/* 换行时恢复原本的颜色 */
 		if (*line_num - num == focus) {
@@ -135,7 +135,7 @@ static int line(int *width, char **ch, int *line_num, int *zhStat, int focus, in
 		(*line_num)++;
 
 		/* 移动光标 */
-		if (cfg == 2)
+		if (type == 2)
 			move(*line_num - noShowText - 1, COLS / 2 + 2);
 		else
 			move(*line_num - noShowText - 1, 3);
@@ -173,7 +173,7 @@ static int line(int *width, char **ch, int *line_num, int *zhStat, int focus, in
 		} else
 			(*width)++;
 	} else {	/* 移动光标到初始位置 */
-		if (cfg == 2)
+		if (type == 2)
 			move(*line_num - noShowText - 1, COLS / 2 + 2);
 		else
 			move(*line_num - noShowText - 1, 3);
@@ -192,7 +192,7 @@ static int line(int *width, char **ch, int *line_num, int *zhStat, int focus, in
 /* focus:  focus_text     用于获取节点
  * focus2: focus_describe 用于高亮
  */
-static void Describe(Data * data, int focus, int focus2, int noShowText, int *allDescribe)
+static void Describe(Menu * data, int focus, int focus2, int noShowText, int *allDescribe)
 {
 	char *ch = NULL; /* 用于打印描述字符时自动折行 */
 	int stat = 0,	 /* 高亮标记 */
@@ -206,7 +206,7 @@ static void Describe(Data * data, int focus, int focus2, int noShowText, int *al
 	attron(COLOR_PAIR(C_BLACK_WHITE));
 	fill(7, COLS / 2 + 1, LINES - 1, COLS - 2);
 
-	get_focus(data, focus);    /* 获取焦点节点的描述数据 */
+	set_focus(data, focus);    /* 获取焦点节点的描述数据 */
 	if (data->focus->describe == NULL)    /* 若数据为空 */
 		return;
 
@@ -223,7 +223,7 @@ static void Describe(Data * data, int focus, int focus2, int noShowText, int *al
 	return;
 }
 
-static void Help(Data * data, int focus, int noShowText, int *allHelp)
+static void Help(Menu * data, int focus, int noShowText, int *allHelp)
 {
 	char *ch = NULL;	/* 用于打印描述字符时自动折行 */
 	int width = 0,		/* 行内字符总宽度 */
@@ -239,7 +239,7 @@ static void Help(Data * data, int focus, int noShowText, int *allHelp)
 	fill(5, 2, LINES - 1, COLS - 2);
 	move(6, 3);
 	do {    /* 遍历多项 */
-		get_focus(data, i3);
+		set_focus(data, i3);
 		if (data->focus == NULL)
 			return;
 		ch = data->focus->text;
@@ -263,14 +263,14 @@ static void Help(Data * data, int focus, int noShowText, int *allHelp)
 
 		/* 字符清零 */
 		width = 0;
-	} while (data->focus->nextText != NULL);
+	} while (data->focus->next != NULL);
 	*allHelp = line_num - 7;
 	attroff(COLOR_PAIR(C_BLACK_WHITE));
 	attroff(COLOR_PAIR(C_WHITE_BLACK));
 	return;
 }
 
-static void Setting(Data * data, int focus, int noShowText, int allChose)
+static void Setting(Menu * data, int focus, int noShowText, int allChose)
 {
 	if (data == NULL || data->text == NULL)
 		return;
@@ -278,7 +278,7 @@ static void Setting(Data * data, int focus, int noShowText, int allChose)
 	     i - noShowText <= allChose && i - noShowText <= LINES - 10; i++) {
 		if (i <= noShowText)
 			continue;
-		get_focus(data, i);
+		set_focus(data, i);
 		if (i != focus) {
 			attroff(A_BOLD);
 			attroff(COLOR_PAIR(C_WHITE_YELLOW));
@@ -292,13 +292,13 @@ static void Setting(Data * data, int focus, int noShowText, int allChose)
 		for (int i = 0; i <= COLS / 2 - 6; i++)
 			printw(" ");
 		mvaddstr(i + 7 - noShowText, 3, data->focus->text);
-		if (data->focus->cfg == 1 && data->focus->var != NULL) {
+		if (data->focus->type == 1 && data->focus->var != NULL) {
 			mvaddch(i + 7 - noShowText, COLS / 2 - 11, '[');
 			attron(A_UNDERLINE);
 			printw("%7d", *(data->focus->var));
 			attroff(A_UNDERLINE);
 			printw("]");
-		} else if (data->focus->cfg == 2 && data->focus->var != NULL) {
+		} else if (data->focus->type == 2 && data->focus->var != NULL) {
 			if (*(data->focus->var) == 0)
 				mvaddstr(i + 7 - noShowText, COLS / 2 - 5,
 					 "( )");

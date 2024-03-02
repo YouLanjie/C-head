@@ -1,5 +1,7 @@
-/* File name: tools.h */
-/* This is a head file */
+/*
+ * File name: tools.h
+ * Describe : C-head公开使用头文件
+ */
 
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
@@ -24,11 +26,6 @@
 #include <ncurses.h>
 #include <locale.h>
 
-/* Old menu */
-extern int ctools_old_menu(char *title, char *text[], int tl, int list);
-extern void ctools_old_menu2(char title[], short p, short a);
-extern void ctools_old_menu3(char title[]);
-
 /* 
  * 新菜单
  */
@@ -37,19 +34,15 @@ struct ctools_menu {
 	/* 初始化Ncurses库(开启ncurses模式) */
 	void (*const ncurses_init)();
 	/* 初始化数据 */
-	void (*const data_init)(struct ctools_menu_t ** data);
+	void (*const data_init)(struct ctools_menu_t ** menu);
 	/* 设置标题 */
-	void (*const set_title)(struct ctools_menu_t * data, char *title);
+	void (*const set_title)(struct ctools_menu_t * menu, char *title);
 	/* 设置菜单类型 */
-	void (*const set_type)(struct ctools_menu_t * data, char *type_str);
-	/* 设置文本 */
-	void (*const set_text)(struct ctools_menu_t * data, ...);
-	/* 添加文本 */
-	void (*const add_text)(struct ctools_menu_t * data, char *new_text);
-	/* 设置文本数据 */
-	void (*const set_text_data)(struct ctools_menu_t * data, char *type_str, char *format, ...);
-	/* 添加文本数据 */
-	void (*const add_text_data)(struct ctools_menu_t * data, char *type_str, char *obj);
+	void (*const set_type)(struct ctools_menu_t * menu, char *type_str);
+	/* 添加选项 */
+	void (*const add_text)(struct ctools_menu_t * menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min);
+	/* 移除选项 */
+	void (*const del_text)(struct ctools_menu_t * menu, int id);
 	/* 显示菜单 */
 	int (*const show)(struct ctools_menu_t * data);
 };

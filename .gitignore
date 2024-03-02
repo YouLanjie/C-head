@@ -6,3 +6,4 @@ bin
 *.exe
 *.sh
 libtools.a
+tags

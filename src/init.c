@@ -10,10 +10,6 @@
 
 #include "include.h"
 
-extern const struct ctools_menu menu;
-extern const struct ctools_cmd cmd;
-extern const struct ctools_config config;
-
 const struct ctools ctools_init()
 {
 	const struct ctools ctools = {

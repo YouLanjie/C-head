@@ -1,5 +1,7 @@
-/* File name: include.h */
-/* This is a head file */
+/*
+ * File name: include.h
+ * Describe : C-head内部使用头文件
+ */
 
 #ifndef _INCLUDE_H_
 #define _INCLUDE_H_
@@ -31,6 +33,7 @@ struct ctools_CONFIG_NODE {
 	struct ctools_CONFIG_NODE *next;
 };
 
+/* init使用函数 */
 extern const struct ctools_menu ctools_menu_init();
 extern const struct ctools_cmd ctools_cmd_init();
 extern const struct ctools_config ctools_config_init();

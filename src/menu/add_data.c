@@ -12,90 +12,20 @@
 #include "./menu.h"
 
 /*
- * 设置选项
+ * 增加数据
  */
-extern void set_text(Data * data, ...)
+static int type_chose(char *type)
 {
-	struct Data *pNew = NULL, *pTmp = NULL;
-	va_list text;
-
-	va_start(text, data);
-	if (data->text != NULL) {
-		free(data->text);
-	}
-
-	pNew = data->text = malloc(sizeof(struct Data));
-	pNew->text = va_arg(text, char *);
-	pNew->number = 1;
-	pNew->describe = NULL;
-	pNew->cfg = 0;
-	pNew->foot = 1;
-	// pNew -> max      = 2147483647;    /* 整型的最大值 */
-	// pNew -> min      = -2147483648;    /* 整型的最小值 */
-	pNew->max = 10000000;
-	pNew->min = -10000000;
-	pNew->var = NULL;
-	pNew->function = NULL;
-
-	for (int i = 2; pNew->text != NULL; i++) {
-		pTmp = pNew;
-		pNew->nextText = malloc(sizeof(struct Data));
-		pNew = pNew->nextText;
-		pNew->text = va_arg(text, char *);
-		pNew->describe = NULL;
-		pNew->number = i;
-		pNew->cfg = 0;
-		pNew->foot = 1;
-		// pNew -> max      = 2147483647;    /* 整型的最大值 */
-		// pNew -> min      = -2147483648;    /* 整型的最小值 */
-		pNew->max = 10000000;
-		pNew->min = -10000000;
-		pNew->var = NULL;
-		pNew->function = NULL;
-	}
-	free(pNew);
-	if (pTmp != NULL)
-		pTmp->nextText = NULL;
-	va_end(text);
-	return;
+	if (type == NULL) return 0;
+#define S(t) (strcmp(t, type) == 0)
+	if (S("number")) return 1;
+	else if (S("toggle") || S("button")) return 2;
+#undef S
+	return 0;
 }
 
 /*
  * 添加选项
- */
-extern void add_text(Data * data, char *text)
-{
-	struct Data *pNew = NULL, *pTmp = NULL;
-
-	pNew = data->text;
-	while (pNew != NULL && pNew->nextText != NULL) pNew = pNew->nextText;
-	if (pNew != NULL) {
-		pTmp = pNew;
-		pNew->nextText = malloc(sizeof(struct Data));
-		pNew = pNew->nextText;
-	} else {
-		pNew = malloc(sizeof(struct Data));
-		data->text = pNew;
-	}
-	pNew->text = malloc(sizeof(char)*(strlen(text) + 1));
-	strcpy(pNew->text, text);
-	pNew->describe = NULL;
-	if (pTmp != NULL) pNew->number = pTmp->number + 1;
-	else pNew->number = 1;
-	pNew->cfg = 0;
-	pNew->foot = 1;
-	// pNew -> max      = 2147483647;    /* 整型的最大值 */
-	// pNew -> min      = -2147483648;    /* 整型的最小值 */
-	pNew->max = 10000000;
-	pNew->min = -10000000;
-	pNew->var = NULL;
-	pNew->function = NULL;
-	pNew->nextText = NULL;
-	return;
-}
-
-/*
- * 设定描述信息
  *
  * All support type list:
  *  [x] 0 <-> describe,
@@ -106,76 +36,100 @@ extern void add_text(Data * data, char *text)
  *  [x] 5 <-> min
  *  [x] o <-> function
  */
-extern void set_text_data(Data * data, char *type, char * format, ...)
+extern void add_text(
+	Menu * menu,
+	int id,
+	char *text,
+	char *describe,
+	void (*func)(),
+	int *var,
+	char *type,
+	int foot,
+	int max,
+	int min)
 {
-	struct Data *pNew;
-	va_list text;
+	Node *pNew = NULL,
+	     *pLast = NULL,
+	     *pNext = NULL;
+	int id_last = 0;
 
-	va_start(text, format);
-	pNew = data->text;
-	while (*format != '\0') {
-		if (*format == '%' && *(format + 1) == 's') {
-#define S(t) (strcmp(t, type) == 0)
-			if (S("describe")) {
-				pNew->describe = va_arg(text, char *);
-			} else if (S("type")) {
-				char *ch = va_arg(text, char *);
-				if (strcmp(ch, "number"))
-					pNew->cfg = 2;
-				else if (strcmp(ch, "button"))
-					pNew->cfg = 1;
-			} else if (S("var")) {
-				pNew->var = va_arg(text, int *);
-			} else if (S("foot")) {
-				pNew->foot = va_arg(text, int);
-			} else if (S("max")) {
-				pNew->max = va_arg(text, int);
-			} else if (S("min")) {
-				pNew->min = va_arg(text, int);
-			} else {
-				pNew->function = va_arg(text, void *);
-			}
-#undef S
-			pNew = pNew->nextText;
-			format++;
-		} else if (*format == '\n' || *format == 'n' || *format == 'N') {
-			pNew = pNew->nextText;
-		}
-		format++;
+	pNew = menu->text;
+	while (pNew != NULL && pNew->next != NULL && (id == 0 || pNew->id < id)) {
+		pLast = pNew;
+		pNew = pNew->next;
 	}
-	va_end(text);
+	if (pNew != NULL && (id == 0 || pNew->id < id)) {
+		/* Add */
+		id_last = pNew->id;
+		pLast = pNew;
+		pNext = NULL;
+		pNew->next = malloc(sizeof(Node));
+		pNew = pNew->next;
+	} else if (pNew != NULL) {
+		/* Insert */
+		id_last = pLast->id;
+		pNext = pNew;
+		pLast->next = malloc(sizeof(Node));
+		pNew = pLast->next;
+	} else {
+		/* New Head */
+		pNew = malloc(sizeof(Node));
+		menu->text = pNew;
+	}
+	pLast != NULL && (pLast->next = pNew);
+
+	pNew->id = id_last + 1;
+	if (text) {
+		pNew->text = malloc(sizeof(char)*(strlen(text) + 1));
+		strcpy(pNew->text, text);
+	} else {
+		pNew->text = NULL;
+	}
+	if (describe) {
+		pNew->describe = malloc(sizeof(char)*(strlen(describe) + 1));
+		strcpy(pNew->describe, describe);
+	} else {
+		pNew->describe = NULL;
+	}
+	pNew->function = func;
+	pNew->var = var;
+	pNew->type = type_chose(type);
+	pNew->foot = foot == 0 ? 1 : foot;
+	// pNew -> max      = 2147483647;    /* 整型的最大值 */
+	// pNew -> min      = -2147483648;    /* 整型的最小值 */
+	if (max <= min) {
+		pNew->max = 10000000;
+		pNew->min = -10000000;
+	} else {
+		pNew->max = max;
+		pNew->min = min;
+	}
+	pNew->next = pNext;
+
+	pNew = pNew->next;
+	while (pNew != NULL) pNew->id++, pNew = pNew->next;
 	return;
 }
 
-/*
- * 增加数据
- *
- * All support type list:
- *  [x] 0 <-> describe,
- *  [x] 1 <-> type(for setting)
- *  [ ] 2 <-> var
- *  [x] 3 <-> foot
- *  [x] 4 <-> max
- *  [x] 5 <-> min
- *  [ ] o <-> function
- */
-extern void add_text_data(Data * data, char *type, char * text)
+extern void del_text(Menu * menu, int id)
 {
-	struct Data *pNew = NULL;
+	Node *pNew = NULL,
+	     *pLast = NULL,
+	     *pNext = NULL;
+	pNew = menu->text;
+	if (!pNew)
+		return;
+	while (pNew != NULL && pNew->next != NULL && (id == 0 || pNew->id < id)) {
+		pLast = pNew;
+		pNew = pNew->next;
+	}
+	pNext = pNew->next;
+	pLast != NULL && (pLast->next = pNext);
+	menu->text == pNew && (menu->text = NULL);
+	free(pNew);
 
-	pNew = data->text;
-	while (pNew != NULL && pNew->describe != NULL) pNew = pNew->nextText;
-	if (pNew == NULL) return;
-
-#define S(t) (strcmp(t, type) == 0)
-	if (S("describe")) {
-		pNew->describe = malloc(sizeof(char)*(strlen(text) + 1));
-		strcpy(pNew->describe, text);
-	} else if (S("type")) pNew->cfg  = strtod(text, NULL);
-	else if (S("foot"))   pNew->foot = strtod(text, NULL);
-	else if (S("max"))    pNew->max  = strtod(text, NULL);
-	else if (S("min"))    pNew->min  = strtod(text, NULL);
-#undef S
+	pNew = pNext;
+	while (pNew != NULL) pNew->id--, pNew = pNew->next;
 	return;
 }
 
