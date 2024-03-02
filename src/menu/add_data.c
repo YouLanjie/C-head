@@ -126,6 +126,7 @@ extern void del_text(Menu * menu, int id)
 	pNext = pNew->next;
 	pLast != NULL && (pLast->next = pNext);
 	menu->text == pNew && (menu->text = NULL);
+	menu->focus == pNew && (menu->focus = pNext ? pNext : pLast);
 	free(pNew);
 
 	pNew = pNext;

@@ -274,7 +274,7 @@ static int show(Menu * menu)
 /* 处理输入 */
 static int Input(int input, int *focus, int *noShowText, int allChose, int height)
 {
-	input = (input > 'a' && input < 'z') ? input - 32 : input;
+	input = (input > 'a' && input < 'z' && input != 'g') ? input - 32 : input;
 	switch (input) {
 	case 0x1B:
 		if (ctools_kbhit() != 0) {
@@ -338,7 +338,6 @@ static int Input(int input, int *focus, int *noShowText, int allChose, int heigh
 		while (*focus - *noShowText < 1)
 			(*noShowText)--;
 		break;
-	case 'q':
 	case 'Q':
 	case '0':
 		clear();
