@@ -141,6 +141,7 @@ static int show(Menu * menu)
 	if (menu->type == 2) height = 8;
 	else height = 10;
 
+	clear();
 	while (input != 0x30 && input != 0x1B) {
 		/* 显示屏幕框架 */
 		display.screen(menu);
