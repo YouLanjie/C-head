@@ -29,13 +29,18 @@
 /*
  * kbhit getch
  */
+/* 判断有没有输入 */
 extern int kbhit();
+/* 利用终端特性做的getch */
 extern int _getch();
+/* 不阻塞输入 */
 extern int kbhitGetchar();
 /* Get the size(x) of the window(range:0~) */
 extern int get_winsize_col();
 /* Get the size(y) of the window(range:0~) */
 extern int get_winsize_row();
+/* 初始化Ncurses库(开启ncurses模式) */
+extern void ctools_ncurses_init();
 
 /*
  * 新菜单
@@ -96,16 +101,6 @@ struct ctools {
 	const struct ctools_cmd cmd;
 	/* 配置文件读取 */
 	const struct ctools_config config;
-	/* 初始化Ncurses库(开启ncurses模式) */
-	void (*const ncurses_init)();
-	/* 判断有没有输入 */
-	int (*const kbhit)();
-	/* 不阻塞输入 */
-	int (*const kbhitGetchar)();
-	/* 利用终端特性做的getch */
-	int (*const getch)();
-	/* 用于对抗ncurses的宏定义干扰 */
-	int (*const getcha)();
 };
 extern const struct ctools ctools_init();
 

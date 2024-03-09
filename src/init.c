@@ -15,11 +15,6 @@ const struct ctools ctools_init()
 	const struct ctools ctools = {
 		.cmd = ctools_cmd_init(),
 		.config = ctools_config_init(),
-		.ncurses_init = ctools_ncurses_init,
-		.kbhit = kbhit,
-		.getch = _getch,
-		.getcha = _getch,
-		.kbhitGetchar = kbhitGetchar,
 	};
 	return ctools;
 }

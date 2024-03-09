@@ -89,7 +89,7 @@ extern int get_winsize_row()
 	return size.ws_row;
 }
 
-void ctools_ncurses_init()
+extern void ctools_ncurses_init()
 {
 	setlocale(LC_ALL, "zh_CN.UTF8");
 	initscr();
