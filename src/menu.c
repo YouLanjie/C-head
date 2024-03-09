@@ -188,7 +188,7 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 	char buf[5] = "0";
 
 	color_on(C_BLACK_WHITE);
-	dsp_fill(y_start, x_start + 1, y_start + heigh + 2, x_start + width + 1);
+	dsp_fill(y_start, x_start, y_start + heigh + 2, x_start + width);
 	move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
 	while (ch && *ch != '\0') {
 		int cond_out = (count + (*ch & 0x80 ? 2 : 1) > width && ch && *ch != '\0');
@@ -242,7 +242,7 @@ static void dsp_describe(Node *node, int focus, int hide_len, int *len)
 	if (node->describe == NULL)    /* 若数据为空 */
 		return;
 
-	*len = dsp_range_print(node->describe, COLS / 2, 7, COLS / 2 - 3, LINES - 10, hide_len, focus);
+	*len = dsp_range_print(node->describe, COLS / 2 + 1, 7, COLS / 2 - 3, LINES - 10, hide_len, focus);
 	return;
 }/*}}}*/
 
@@ -273,7 +273,7 @@ static void dsp_help(Menu * data, int focus, int hide_len, int *len)
 		i++;
 	} while (data->focus->next != NULL);
 
-	*len = dsp_range_print(ch_3, 1, 5, COLS - 4, LINES - 8, hide_len, focus);
+	*len = dsp_range_print(ch_3, 2, 5, COLS - 4, LINES - 8, hide_len, focus);
 	if (ch_3 != tmp)
 		free(ch_3);
 	return;
@@ -284,7 +284,7 @@ static void dsp_help(Menu * data, int focus, int hide_len, int *len)
  * Show
  * ================================================== */
 
-/* 处理输入 */
+/* 处理输入(菜单选项上下移动) */
 static int Input(int input, int *focus, int *hide_len, int allChose, int y_start)
 {/*{{{*/
 	input = (input > 'a' && input < 'z' && input != 'g') ? input - 32 : input;
@@ -410,6 +410,7 @@ extern int cmenu_show(cmenu menu)
 			dsp_describe(p->focus, focus_id2, hide_len2, &line_desc);    /* 显示焦点选项的描述 */
 		} else
 			dsp_help(p, focus_id, hide_len, &line_node); /* 仅显示帮助屏幕框架 */
+		return 0;
 	}
 
 	y_start = p->type == t_help ? 8 : 10;
@@ -423,17 +424,17 @@ extern int cmenu_show(cmenu menu)
 		set_focus(p, focus_id);
 
 		/* 打印选项 */
-		if (p->type != t_help)    /* 非帮助 */
+		if (p->type != t_help && p->type != t_help_only)    /* 非帮助 */
 			dsp_describe(p->focus, focus_id2, hide_len2, &line_desc);    /* 显示焦点选项的描述 */
 		if (p->type == t_normal || p->type == t_setting)
 			dsp_text(p, focus_id, hide_len, line_node);
-		else if (p->type == t_help)    /* 帮助 */
+		else if (p->type == t_help || p->type == t_help_only)    /* 帮助 */
 			dsp_help(p, focus_id, hide_len, &line_node);
 
 		/* 移动焦点指针到焦点文本 */
 		set_focus(p, focus_id);
 
-		if (p->type != t_help) {    /* 非帮助 */
+		if (p->type != t_help && p->type != t_help_only) {    /* 非帮助 */
 			if (side) {    /* 若焦点在描述内容上（side != 0） */
 				/* 打印描述的按键提示 */
 				attron(A_DIM);
@@ -499,7 +500,7 @@ extern int cmenu_show(cmenu menu)
 			}
 			break;
 		case '+':
-			if (p->type == 3 && p->focus->var.type == 1
+			if (p->type == t_setting && p->focus->var.type == 1
 			    && p->focus->var.var != NULL) {
 				if ((*p->focus->var.var) + p->focus->var.foot > p->focus->var.max)
 					(*p->focus->var.var) = p->focus->var.min;
@@ -508,7 +509,7 @@ extern int cmenu_show(cmenu menu)
 			}
 			break;
 		case '-':
-			if (p->type == 3 && p->focus->var.type == 1
+			if (p->type == t_setting && p->focus->var.type == 1
 			    && p->focus->var.var != NULL) {
 				if ((*p->focus->var.var) - p->focus->var.foot < p->focus->var.min)
 					(*p->focus->var.var) = p->focus->var.max;
