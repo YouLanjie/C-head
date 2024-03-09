@@ -34,7 +34,6 @@ struct ctools_CONFIG_NODE {
 };
 
 /* init使用函数 */
-extern const struct ctools_menu ctools_menu_init();
 extern const struct ctools_cmd ctools_cmd_init();
 extern const struct ctools_config ctools_config_init();
 

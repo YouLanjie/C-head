@@ -13,14 +13,13 @@
 const struct ctools ctools_init()
 {
 	const struct ctools ctools = {
-		.menu = ctools_menu_init(),
 		.cmd = ctools_cmd_init(),
 		.config = ctools_config_init(),
 		.ncurses_init = ctools_ncurses_init,
-		.kbhit = ctools_kbhit,
-		.getch = ctools_getch,
-		.getcha = ctools_getch,
-		.kbhitGetchar = ctools_kbhitGetchar,
+		.kbhit = kbhit,
+		.getch = _getch,
+		.getcha = _getch,
+		.kbhitGetchar = kbhitGetchar,
 	};
 	return ctools;
 }

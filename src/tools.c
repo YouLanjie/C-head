@@ -4,10 +4,10 @@
 #include <sys/ioctl.h>
 #include <asm-generic/ioctls.h>
 
-/* 
+/*
  * 判断有没有输入
  */
-int ctools_kbhit()
+extern int kbhit()
 {
 	struct termios oldt, newt;
 	int ch;
@@ -28,10 +28,10 @@ int ctools_kbhit()
 	return 0;
 }
 
-/* 
+/*
  * 不阻塞输入
  */
-int ctools_kbhitGetchar()
+extern int kbhitGetchar()
 {
 	struct termios oldt, newt;
 	int ch;
@@ -53,7 +53,7 @@ int ctools_kbhitGetchar()
 }
 
 /* 利用终端特性做的getch */
-int ctools_getch()
+extern int _getch()
 {
 	struct termios tm, tm_old;
 	int fd = 0, ch;
@@ -71,6 +71,22 @@ int ctools_getch()
 		return -1;
 	}
 	return ch;
+}
+
+/* Get the size(x) of the window */
+extern int get_winsize_col()
+{
+	struct winsize size;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	return size.ws_col;
+}
+
+/* Get the size(y) of the window */
+extern int get_winsize_row()
+{
+	struct winsize size;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	return size.ws_row;
 }
 
 void ctools_ncurses_init()

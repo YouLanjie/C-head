@@ -217,7 +217,7 @@ static int cmd_input(char *cmd)
 		num   = 0;
 	while (input != '\n' && input != '\r') {
 		cmd[num] = '\0';
-		input = ctools_getch();
+		input = _getch();
 		switch (input) {
 		case 0x7f: {
 			if (num != 0) {
@@ -237,7 +237,7 @@ static int cmd_input(char *cmd)
 			break;
 		}
 		case 0x1B: {
-			if (ctools_kbhit() == 1) {
+			if (kbhit() == 1) {
 				break;
 			} else {
 				input = '\n';

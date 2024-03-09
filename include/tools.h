@@ -26,26 +26,36 @@
 #include <ncurses.h>
 #include <locale.h>
 
-/* 
+/*
+ * kbhit getch
+ */
+extern int kbhit();
+extern int _getch();
+extern int kbhitGetchar();
+/* Get the size(x) of the window(range:0~) */
+extern int get_winsize_col();
+/* Get the size(y) of the window(range:0~) */
+extern int get_winsize_row();
+
+/*
  * 新菜单
  */
-struct ctools_menu_t;		/* 结构体数据 */
-struct ctools_menu {
-	/* 初始化Ncurses库(开启ncurses模式) */
-	void (*const ncurses_init)();
-	/* 初始化数据 */
-	void (*const data_init)(struct ctools_menu_t ** menu);
-	/* 设置标题 */
-	void (*const set_title)(struct ctools_menu_t * menu, char *title);
-	/* 设置菜单类型 */
-	void (*const set_type)(struct ctools_menu_t * menu, char *type_str);
-	/* 添加选项 */
-	void (*const add_text)(struct ctools_menu_t * menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min);
-	/* 移除选项 */
-	void (*const del_text)(struct ctools_menu_t * menu, int id);
-	/* 显示菜单 */
-	int (*const show)(struct ctools_menu_t * data);
-};
+typedef void* cmenu;
+/* 初始化数据 */
+extern cmenu cmenu_create();
+/* 设置标题 */
+extern void cmenu_set_title(cmenu menu, char *title);
+/* 设置菜单类型 */
+extern void cmenu_set_type(cmenu menu, char *type_str);
+/* 添加选项 */
+extern void cmenu_add_text(cmenu menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min);
+/* 设置选项
+ * Key: "text", "describe", "func", "var", "type", "foot", "max", "min" */
+extern void cmenu_set_text(cmenu menu, int id, char *tag, void *value);
+/* 移除选项 */
+extern void cmenu_del_text(cmenu menu, int id);
+/* 显示菜单 */
+extern int cmenu_show(cmenu menu);
 
 /*
  * 命令行操作
@@ -82,8 +92,6 @@ struct ctools_config {
 };
 
 struct ctools {
-	/* 菜单 */
-	const struct ctools_menu menu;
 	/* 命令行 */
 	const struct ctools_cmd cmd;
 	/* 配置文件读取 */
