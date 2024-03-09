@@ -663,7 +663,7 @@ static int set_node(Node *node, void *arg[][2])
 		if (i2 >= 8)
 			continue;
 		char *str = NULL;
-		if (i2 <= 1) {
+		if (i2 <= 1 && arg[i][1] != NULL) {
 			str = malloc(sizeof(char) * (strlen(arg[i][1]) + 1));
 			strcpy(str, arg[i][1]);
 		}
