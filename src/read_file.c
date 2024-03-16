@@ -12,7 +12,7 @@
 
 typedef struct Rules {
 	char *str;
-	void *var;
+	void **var;
 	struct Rules *next;
 } Rules;
 
@@ -71,59 +71,60 @@ static char *SkipWhiteSpace(char *curs, int *line)
 /*
  * 获取关键字
  */
-static int getToken(char *curs, char **ret, int *line)
+static int getToken(char **curs, char **ret, int *line)
 {/*{{{*/
 	int token = 0;
 
-	curs = SkipWhiteSpace(curs, line);
-	if (IsNonDigit(*curs)) {	/* TAG */
-		*ret = curs;
-		while (IsLetterOrDigit(*curs)) ++curs;
+	*curs = SkipWhiteSpace(*curs, line);
+	if (IsNonDigit(**curs)) {	/* TAG */
+		*ret = *curs;
+		while (IsLetterOrDigit(**curs)) ++(*curs);
 		/* token = TK_ERROR; */
 		token = TK_TAG;
-	} else if (*curs == '=') {	/* 等于号（赋值） */
-		++curs;
+	} else if (**curs == '=') {	/* 等于号（赋值） */
+		++(*curs);
 		token = TK_ASSIGNMENT;
-	} else if (*curs == '"') {	/* 字符 */
-		*ret = curs;
+	} else if (**curs == '"') {	/* 字符 */
+		*ret = *curs;
+		++(*ret);
 		while (1) {
-			++curs;
-			if (*curs == '\n' || *curs == '\0') {
+			++(*curs);
+			if (**curs == '\n' || **curs == '\0') {
 				token = TK_ERROR;
 				printf(":%d:expect \"(second),token '%s',str '%s'\n",
 				       *line, TK_list[token], *ret);
 				break;
-			} else if (*curs == '"') {
-				*curs = '\0';
-				++curs;
+			} else if (**curs == '"') {
+				**curs = '\0';
+				++(*curs);
 				token = TK_STRING;
 				break;
 			}
 		}
-	} else if (IsDigit(*curs) || *curs == '.' || *curs == '-') {	/* 数字 */
-		*ret = curs;
-		if (*curs == '-') {
-			++curs;
+	} else if (IsDigit(**curs) || **curs == '.' || **curs == '-') {	/* 数字 */
+		*ret = *curs;
+		if (**curs == '-') {
+			++(*curs);
 		}
-		while (IsDigit(*curs)) {
-			++curs;
+		while (IsDigit(**curs)) {
+			++(*curs);
 		}
 
-		if (*curs == '.') {
-			++curs;
-			while (IsDigit(*curs)) {
-				++curs;
+		if (**curs == '.') {
+			++(*curs);
+			while (IsDigit(**curs)) {
+				++(*curs);
 			}
 		}
 		token = TK_NUM;
-	} else if (*curs == '\0') {	/* 结束 */
+	} else if (**curs == '\0') {	/* 结束 */
 		token = TK_FILE_EOF;
-	} else if (*curs == ';') {	/* 分号 */
-		++curs;
+	} else if (**curs == ';') {	/* 分号 */
+		++(*curs);
 		token = TK_SEMICOLON;
 	} else {
-		printf(":%d:%c:Unrecognized character\n", *line, *curs);
-		++curs;
+		printf(":%d:%c:Unrecognized character\n", *line, **curs);
+		++(*curs);
 		token = getToken(curs, ret, line);
 	}
 	return token;
@@ -137,25 +138,27 @@ static int run(Rules *rules, char *curs)
 	int line = 0, type = 0;
 	int token = '0';
 	char *ret = 0;
-	int value = 0;
+	int  value = 0;
 	char * str;
 
 	if (curs == NULL)
 		return -1;
  EXIT:
 	while (token != TK_FILE_EOF) {
-		token = getToken(curs, &ret, &line);
+		token = getToken(&curs, &ret, &line);
 		if (token != TK_TAG)	/* 变量(tag)名称 */
 			goto EXIT;
 
-		token = getToken(curs, &ret, &line);
+		token = getToken(&curs, &ret, &line);
 		if (token != TK_ASSIGNMENT) {	/* 等于号 */
 			printf(":%d:expect `=`,token '%s'\n",
 			       line, TK_list[token]);
 			goto EXIT;
 		}
+		*(curs - 1) = '\0';
+		Rules *rule = check(rules, ret);
 
-		token = getToken(curs, &ret, &line);
+		type = token = getToken(&curs, &ret, &line);
 		if (token == TK_NUM) {	/* 赋值内容 */
 			value = strtod(ret, NULL);
 		} else if (token == TK_STRING) {	/* 赋值内容 */
@@ -167,20 +170,19 @@ static int run(Rules *rules, char *curs)
 			goto EXIT;
 		}
 
-		token = getToken(curs, &ret, &line);
+		token = getToken(&curs, &ret, &line);
 		if (token != TK_SEMICOLON) {	/* 分号 */
 			printf(":%d:expect `;`,token '%s'\n",
 			       line, TK_list[token]);
 			goto EXIT;
 		}
-		Rules *rule = check(rules, str);
 		if (!rule)
 			continue;
 		// 运行函数
 		if (type == TK_NUM) {
-			rule->var = (void*)(long)value;
+			*rule->var = (void*)(long)value;
 		} else if (type == TK_STRING) {
-			rule->var = str;
+			*rule->var = str;
 		}
 	}
 	return 0;
