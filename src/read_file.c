@@ -10,18 +10,11 @@
 
 #include "include.h"
 
-struct ctools_CONFIG {
-	char *filename;		/* 文件名称 */
-	FILE *file;		/* 文件 */
-	char *base;		/* 全部数据 */
-	char *curs;		/* 光标 */
-	char *lineHead;		/* 行头 */
-	long  size;		/* 文件大小 */
-	int   line;		/* 报错用行数 */
-
-	struct ctools_CONFIG_NODE *node;
-	struct ctools_CONFIG_NODE *curs_node;
-};
+typedef struct Rules {
+	char *str;
+	void *var;
+	struct Rules *next;
+} Rules;
 
 struct VAULE {
 	int   num;
@@ -29,315 +22,207 @@ struct VAULE {
 	char *end;
 };
 
-struct ctools_CONFIG Config = { NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL };
 struct VAULE value = { 0, NULL, NULL };
 enum TK_ctools_CONFIG { TK_TAG = 0, TK_ASSIGNMENT, TK_SEMICOLON, TK_STRING, TK_NUM, TK_FILE_EOF, TK_ERROR };
-const static char TK_list[7][12] = {"TAG", "ASSIGNMENT", "SEMICLON", "STRING", "NUM", "FILE EOF", "ERROR"};
-
-#define CURS (Config.curs)
+const static char *TK_list[7] = {"TAG", "ASSIGNMENT", "SEMICLON", "STRING", "NUM", "FILE EOF", "ERROR"};
 
 #define IsDigit(c) (c>='0' && c<='9')
 #define IsNonDigit(c) ( (c >= 'a' && c <= 'z') || (c == '_') || (c >= 'A' && c <= 'Z') )
 #define IsLetterOrDigit(c) ( IsDigit(c) || IsNonDigit(c) )
 
-/*
- * 读取文件
- */
-static char *read_file(char *filename)
-{
-	Config.file = fopen(filename, "r");
-	if (!Config.file)
-		return NULL;
-
-	fseek(Config.file, 0L, SEEK_END);
-	Config.size = ftell(Config.file);
-	Config.base = malloc(Config.size + 1);
-	if (Config.base == NULL) {
-		perror("The file is too big");
-		goto RUN_EXIT;
+static Rules *check(Rules *rules, char *str)
+{/*{{{*/
+	Rules *tmp = rules;
+	while (tmp != NULL) {
+		if (strcmp(str, tmp->str) == 0)
+			return tmp;
+		tmp = tmp->next;
 	}
-	fseek(Config.file, 0L, SEEK_SET);
-	fread(Config.base, 1, Config.size, Config.file);
-
-	Config.base[Config.size] = '\0';
-	Config.curs = Config.lineHead = Config.base;
-	Config.filename = filename;
-
- RUN_EXIT:
-	fclose(Config.file);
-	return Config.base;
-}
+	return NULL;
+}/*}}}*/
 
 /*
  * 跳过空白字符
  */
-static void SkipWhiteSpace(void)
-{
-	char ch = *CURS;
+static char *SkipWhiteSpace(char *curs, int *line)
+{/*{{{*/
+	char ch = *curs;
 	while (ch == '\t' || ch == '\v' || ch == '\f' || ch == ' ' ||
 	       ch == '\r' || ch == '\n' || ch == '#') {
 		switch (ch) {
 		case '#':
-			while (*CURS != '\n' && *CURS != '\0') {
-				++CURS;
+			while (*curs != '\n' && *curs != '\0') {
+				++curs;
 			}
 			break;
 		case '\n':
-			++CURS;
-			++(Config.line);
-			Config.lineHead = CURS;
+			++curs;
+			++(*line);
 			break;
 		default:
-			++CURS;
+			++curs;
 			break;
 		}
-		ch = *CURS;
+		ch = *curs;
 	}
-}
+	return curs;
+}/*}}}*/
 
 /*
  * 获取关键字
  */
-static int getToken(void)
-{
+static int getToken(char *curs, char **ret, int *line)
+{/*{{{*/
 	int token = 0;
-	char *start = CURS;
-	SkipWhiteSpace();
-	if (IsNonDigit(*CURS)) {	/* TAG */
-		start = CURS;
-		while (IsLetterOrDigit(*CURS)) {
-			++CURS;
-		}
-		struct ctools_CONFIG_NODE *curs = Config.node;
-		if (curs == NULL) {
-			Config.node = curs = malloc(sizeof(struct ctools_CONFIG_NODE));
-			curs->name = NULL;
-			curs->type = 0;
-			curs->ch   = NULL;
-			curs->num  = 0;
-			curs->next = NULL;
-		}
-		while (curs != NULL && curs->next != NULL) {
-			if (curs->name != NULL
-			    && (CURS - start) == (long)strlen(curs->name)
-			    && strncmp(start, curs->name, CURS - start) == 0) {
-				Config.curs_node = curs;
-				token = TK_TAG;
-				goto GET_TOKEN_EXIT;
-			}
-			curs = curs->next;
-		}
-		if (curs->name != NULL && curs->next == NULL) {
-			curs->next = malloc(sizeof(struct ctools_CONFIG_NODE));
-			curs = curs->next;
-			if (!curs) {
-				token = TK_ERROR;
-				goto GET_TOKEN_EXIT;
-			}
-		}
-		curs->name = malloc(sizeof(char) * (CURS - start + 1));
-		int i = 0;
-		for (i = 0; i < (CURS - start); ++i) {
-			curs->name[i] = *(start + i);
-		}
-		curs->name[i] = '\0';
-		curs->type = 0;
-		curs->ch   = NULL;
-		curs->num  = 0;
-		curs->next = NULL;
-		Config.curs_node = curs;
+
+	curs = SkipWhiteSpace(curs, line);
+	if (IsNonDigit(*curs)) {	/* TAG */
+		*ret = curs;
+		while (IsLetterOrDigit(*curs)) ++curs;
 		/* token = TK_ERROR; */
 		token = TK_TAG;
-	} else if (*CURS == '=') {	/* 等于号（赋值） */
-		++CURS;
+	} else if (*curs == '=') {	/* 等于号（赋值） */
+		++curs;
 		token = TK_ASSIGNMENT;
-	} else if (*CURS == '"') {	/* 字符 */
-		value.begin = CURS;
+	} else if (*curs == '"') {	/* 字符 */
+		*ret = curs;
 		while (1) {
-			++CURS;
-			if (*CURS == '\n' || *CURS == '\0') {
-				value.end = value.begin;
+			++curs;
+			if (*curs == '\n' || *curs == '\0') {
 				token = TK_ERROR;
-				printf("%s:%d:expect \"(second),token '%s',str '%s'\n",
-				       Config.filename, Config.line, TK_list[token],
-				       value.begin);
+				printf(":%d:expect \"(second),token '%s',str '%s'\n",
+				       *line, TK_list[token], *ret);
 				break;
-			} else if (*CURS == '"') {
-				value.end = CURS;
-				++CURS;
+			} else if (*curs == '"') {
+				*curs = '\0';
+				++curs;
 				token = TK_STRING;
 				break;
 			}
 		}
-	} else if (IsDigit(*CURS) || *CURS == '.' || *CURS == '-') {	/* 数字 */
-		if (*CURS == '-') {
-			++CURS;
+	} else if (IsDigit(*curs) || *curs == '.' || *curs == '-') {	/* 数字 */
+		*ret = curs;
+		if (*curs == '-') {
+			++curs;
 		}
-		while (IsDigit(*CURS)) {
-			++CURS;
+		while (IsDigit(*curs)) {
+			++curs;
 		}
 
-		if (*CURS == '.') {
-			++CURS;
-			while (IsDigit(*CURS)) {
-				++CURS;
+		if (*curs == '.') {
+			++curs;
+			while (IsDigit(*curs)) {
+				++curs;
 			}
 		}
-		value.num = strtod((char *)start, NULL);
 		token = TK_NUM;
-	} else if (*CURS == '\0') {	/* 结束 */
+	} else if (*curs == '\0') {	/* 结束 */
 		token = TK_FILE_EOF;
-	} else if (*CURS == ';') {	/* 分号 */
-		++CURS;
+	} else if (*curs == ';') {	/* 分号 */
+		++curs;
 		token = TK_SEMICOLON;
 	} else {
-		printf("%s:%d:%c:%s", Config.filename, Config.line, *CURS,
-		       "Unrecognized character\n");
-		++CURS;
-		token = getToken();
+		printf(":%d:%c:Unrecognized character\n", *line, *curs);
+		++curs;
+		token = getToken(curs, ret, line);
 	}
- GET_TOKEN_EXIT:
 	return token;
-}
-
-/*
- * 重新初始化变量
- */
-static int reInitVar(void)
-{
-	Config.filename = NULL;
-	Config.curs = NULL;
-	Config.line = 0;
-	Config.node = NULL;
-	Config.curs_node = NULL;
-	return 0;
-}
+}/*}}}*/
 
 /*
  * 解析内容
  */
-static struct ctools_CONFIG_NODE *runner()
-{
+static int run(Rules *rules, char *curs)
+{/*{{{*/
+	int line = 0, type = 0;
 	int token = '0';
-	int type = 0;
+	char *ret = 0;
+	int value = 0;
+	char * str;
 
-	if (CURS == NULL)
-		return NULL;
+	if (curs == NULL)
+		return -1;
  EXIT:
 	while (token != TK_FILE_EOF) {
-		token = getToken();
+		token = getToken(curs, &ret, &line);
 		if (token != TK_TAG)	/* 变量(tag)名称 */
 			goto EXIT;
 
-		token = getToken();
+		token = getToken(curs, &ret, &line);
 		if (token != TK_ASSIGNMENT) {	/* 等于号 */
-			printf("%s:%d:expect `=`,token '%s'\n",
-			       Config.filename, Config.line, TK_list[token]);
+			printf(":%d:expect `=`,token '%s'\n",
+			       line, TK_list[token]);
 			goto EXIT;
 		}
 
-		type = token = getToken();
-		if (token != TK_NUM && token != TK_STRING) {	/* 赋值内容 */
-			printf("%s:%d:expect `num` or `string`,token '%s'\n",
-			       Config.filename, Config.line, TK_list[token]);
+		token = getToken(curs, &ret, &line);
+		if (token == TK_NUM) {	/* 赋值内容 */
+			value = strtod(ret, NULL);
+		} else if (token == TK_STRING) {	/* 赋值内容 */
+			str = malloc(sizeof(char) * (strlen(ret) + 1));
+			strcpy(str, ret);
+		} else {
+			printf(":%d:expect `num` or `string`,token '%s'\n",
+			       line, TK_list[token]);
 			goto EXIT;
 		}
 
-		token = getToken();
+		token = getToken(curs, &ret, &line);
 		if (token != TK_SEMICOLON) {	/* 分号 */
-			printf("%s:%d:expect `;`,token '%s'\n",
-			       Config.filename, Config.line, TK_list[token]);
+			printf(":%d:expect `;`,token '%s'\n",
+			       line, TK_list[token]);
 			goto EXIT;
 		}
+		Rules *rule = check(rules, str);
+		if (!rule)
+			continue;
 		// 运行函数
 		if (type == TK_NUM) {
-			Config.curs_node->type = 1;
-			Config.curs_node->num = value.num;
+			rule->var = (void*)(long)value;
 		} else if (type == TK_STRING) {
-			Config.curs_node->type = 2;
-			Config.curs_node->ch = malloc(sizeof(char) * (value.end - value.begin));
-			strncpy(Config.curs_node->ch, (value.begin + 1), value.end - (value.begin + 1));
-			Config.curs_node->ch[value.end - (value.begin + 1)] = '\0';
+			rule->var = str;
 		}
 	}
-	return Config.node;
-}
+	return 0;
+}/*}}}*/
 
 /*
- * 入口 by filename
+ * 入口 by char
  */
-static struct ctools_CONFIG_NODE *run_by_filename(char *filename)
-{
-	reInitVar();
-	read_file(filename);
-	runner();
-	return Config.node;
-}
+extern int cconfig_run(cconfig rule, char *data)
+{/*{{{*/
+	if (!data || !rule)
+		return -1;
 
-/*
- * 入口 by filename
- */
-static struct ctools_CONFIG_NODE *run_by_char(char *data)
-{
-	reInitVar();
-	Config.curs = Config.lineHead = Config.base = data;
-	Config.filename = "<INPUT>";
-	runner();
-	return Config.node;
-}
+	Rules *rules = rule;
+	char *str = malloc(sizeof(char) * (strlen(data + 1)));
+	strcpy(str, data);
+	run(rules, str);
+	free(str);
+	return 0;
+}/*}}}*/
 
-static char *rt_name(struct ctools_CONFIG_NODE *data)
-{
-	if (data != NULL)
-		return data->name;
+/* 设置规则 */
+extern int cconfig_rule_set(cconfig *rule, char *name, void *val)
+{/*{{{*/
+	Rules *rules = check(*rule, name);
+	if (rules == NULL && name) {
+		rules = malloc(sizeof(Rules));
+		rules->str = malloc(sizeof(char) * (strlen(name) + 1));
+		strcpy(rules->str, name);
+		rules->var = val;
+		rules->next = NULL;
+	} else {
+		rules->var = val;
+	}
+	Rules *tmp = *rule;
+	while(tmp != NULL && tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+	if (!tmp)
+		*rule = rules;
 	else
-		return NULL;
-}
+		tmp->next = rules;
+	return 0;
+}/*}}}*/
 
-static char *rt_str(struct ctools_CONFIG_NODE *data)
-{
-	if (data != NULL)
-		return data->ch;
-	else
-		return NULL;
-}
-
-static int rt_num(struct ctools_CONFIG_NODE *data)
-{
-	if (data != NULL)
-		return data->num;
-	else
-		return 0;
-}
-
-static int rt_type(struct ctools_CONFIG_NODE *data)
-{
-	if (data != NULL)
-		return data->type;
-	else
-		return 0;
-}
-
-static struct ctools_CONFIG_NODE *rt_next(struct ctools_CONFIG_NODE *data)
-{
-	if (data != NULL)
-		return data->next;
-	else
-		return NULL;
-}
-
-
-const struct ctools_config ctools_config_init()
-{
-	const struct ctools_config config = {
-		.readfile = read_file,
-		.run_file = run_by_filename,
-		.run_char = run_by_char,
-		.get_name = rt_name,
-		.get_type = rt_type,
-		.get_str = rt_str,
-		.get_num = rt_num,
-		.get_next_node = rt_next,
-	};
-	return config;
-}

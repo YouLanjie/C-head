@@ -39,6 +39,8 @@ extern int kbhitGetchar();
 extern int get_winsize_col();
 /* Get the size(y) of the window(range:0~) */
 extern int get_winsize_row();
+/* 读取文件 */
+extern char *_fread(FILE *fp);
 /* 初始化Ncurses库(开启ncurses模式) */
 extern void ctools_ncurses_init();
 
@@ -63,46 +65,11 @@ extern void cmenu_del_text(cmenu menu, int id);
 extern int cmenu_show(cmenu menu);
 
 /*
- * 命令行操作
- */
-typedef struct ctools_cmd_list {
-	char const             *const name;
-	char const             *const describe;
-	void *                (*const v)(void *);
-	struct ctools_cmd_list *const next;
-} ctools_cmd_list;
-
-struct ctools_cmd {
-	int    (*const cmd_list_set)(ctools_cmd_list*);
-	int    (*const input)(char*);
-	void * (*const run)(char[]);
-	int    (*const ui)(void);
-	int      const cmd_max_len;
-	int      const arg_max_len;
-};
-
-/*
  * 读取配置文件
  */
-struct ctools_CONFIG_NODE;
-struct ctools_config {
-	char *(*readfile)(char *filename);
-	struct ctools_CONFIG_NODE *(*run_file)(char *filename);
-	struct ctools_CONFIG_NODE *(*run_char)(char *data);
-	char *(*get_name)(struct ctools_CONFIG_NODE* node);
-	int   (*get_type)(struct ctools_CONFIG_NODE* node);
-	char *(*get_str)(struct ctools_CONFIG_NODE* node);
-	int   (*get_num)(struct ctools_CONFIG_NODE* node);
-	struct ctools_CONFIG_NODE *(*get_next_node)(struct ctools_CONFIG_NODE* node);
-};
-
-struct ctools {
-	/* 命令行 */
-	const struct ctools_cmd cmd;
-	/* 配置文件读取 */
-	const struct ctools_config config;
-};
-extern const struct ctools ctools_init();
+typedef void* cconfig;
+extern int cconfig_rule_set(cconfig *rule, char *name, void *val);
+extern int cconfig_run(cconfig rule, char *data);
 
 #endif
 

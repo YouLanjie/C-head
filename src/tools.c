@@ -89,6 +89,30 @@ extern int get_winsize_row()
 	return size.ws_row;
 }
 
+/* 读取文件 */
+extern char *_fread(FILE *fp)
+{
+	long size = 0;
+	char *str = NULL;
+
+	if (!fp)
+		return NULL;
+
+	fseek(fp, 0L, SEEK_END);
+	size = ftell(fp);
+	str = malloc(sizeof(char) * (size + 1));
+	if (str == NULL) {
+		perror("The file is too big");
+		return NULL;
+	}
+	fseek(fp, 0L, SEEK_SET);
+	fread(str, 1, size, fp);
+
+	str[size] = '\0';
+
+	return str;
+}
+
 extern void ctools_ncurses_init()
 {
 	setlocale(LC_ALL, "zh_CN.UTF8");
