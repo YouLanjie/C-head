@@ -32,7 +32,7 @@
 /* 判断有没有输入 */
 extern int kbhit();
 /* 利用终端特性做的getch */
-extern int _getch();
+extern int _getch(void);
 /* 不阻塞输入 */
 extern int kbhitGetchar();
 /* Get the size(x) of the window(range:0~) */
@@ -52,7 +52,8 @@ typedef void* cmenu;
 extern cmenu cmenu_create();
 /* 设置标题 */
 extern void cmenu_set_title(cmenu menu, char *title);
-/* 设置菜单类型 */
+/* 设置菜单类型 
+ * Key: "normal", "main_only", "help", "setting", "help_only" */
 extern void cmenu_set_type(cmenu menu, char *type_str);
 /* 添加选项 */
 extern void cmenu_add_text(cmenu menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min);

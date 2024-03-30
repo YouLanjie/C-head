@@ -24,105 +24,104 @@
 注意！本README文件内容可能会跟不上代码翻新的速度，具体功能请以实际代码为准
 #+end_quote
 附注:大多数功能需要使用 =ctools_init= 函数返回的值为接口使用，例如:
-#+begin_src c
-  #include "include/tools.h"
-
-  int main()
-  {
-          int inp = 0;
-          struct ctools ctools = ctools_init();
-          inp = ctools.getcha();
-          printf("Your input:%c\n", inp);
-          return 0;
-  }
-#+end_src
 *** 定义了Linux标准库没有的特殊输入函数
-- =getch()= 不回显的输入函数，可供实现 _等待用户输入，输入后无需回车确认
+- =_getch()= 不回显的输入函数，可供实现 _等待用户输入，输入后无需回车确认
   让程序继续并且不显示输入的字符_ 的功能（返回整数值作为字符值）（即输入不回显，
   无行缓冲）。
 - =kbhit()= 可以判断当且是否有输入（返回整数值，1有，0无）。
 - =kbhitGetchar()= 基于 =kbhit= 函数的基础上加上一些修改能够顺便获取输入的
   字符，且无需等待输入，不会阻止程序的继续运行。
 *** 自行编写的工具
-**** 个人认为最有用的——menu菜单功能 =ctools.menu.*=
+**** 个人认为最有用的——menu菜单功能 =cmenu=
 该功能能够在Linux环境下实现屏幕大小对齐（过小的终端不可用）。提供可视化选择。并
 且可以为选项添加描述，充当半个帮助。选项、描述采用滚动设计，若光标移动到了显示上
 限但还有选项时会让选项上滚，描述也同理，都是可以翻动的，并且描述还使用了白底黑字
 做显示颜色（可能有的终端会显示成黑底黑色），选中项则做反色处理
 ***** 功能介绍：接口一览
-在使用菜单时需要定义一个 =struct ctools_menu_t= 型的指针变量并调用结构体
-=CT_MENU=中的 =data_init= 函数用于为变量初始化。
-
+在使用菜单时需要定义一个 =cmenu= 型的变量并调用 =cmenu_create= 函数为变量初始化。
 以下是对各个函数的说明：
 
-- =.ncurses_init()=
+- =ctools_ncurses_init()=
   初始化ncurses
-- =.data_init()=
-  初始化数据结构体
-- =.set_title()=
+- =cmenu_create()=
+  初始化数据指针
+- =cmenu_set_title()=
   设置界面标题
-- =.set_type()=
-  设置菜单的类型
-  - 类型列表
-    1. =normal= 默认
-    2. =main_only= 仅显示主界面
-    3. =help= 帮助模式
-    4. =setting= 设置模式
-    5. =help_only= 仅显示帮助界面，无输入处理
-- =.set_text()=
-  设置菜单的选项，可选参数类型为char（最后一个参数必须为 =NULL= !）
-- =.add_text()=
-  添加菜单选项
-- =.set_text_data()=
-  为菜单的各个选项设置属性。
-  - 第二参数：属性的类型
-    - =describe= 描述
-    - =type= 类型/选项
-      - =number= 设置类型为数字的参数(可选参数部分)
-      - =button= 设置类型为按钮/开关
-    - =var= 调整的变量
-    - =foot= 步长
-    - =max= 变量的最大值
-    - =min= 变量的最小值
-  - 第三参数：控制字符串
-    - =%s= 用于告诉程序将未使用的参数分配给第N个节点（N从1算起）
-    - =n= 用于跳过节点（大小写通用）
-    - 示例： ="%s %s N %s N N N %s"=  
-      将参数一次写入到第一、第二、（第三被跳过）、  
-      第四、（第五六七节点被跳过）、第八节点
-- =.add_text_data()=
-  为菜单的最后一个未添加指定属性的选项添加属性。仅支持 =type= =foot= =max= =min=
-  这四种类型
-- =.show()=
+- =cmenu_set_type=
+  设置菜单类型，可选项如下：
+  Key: "normal", "main_only", "help", "setting", "help_only"
+  - =normal= 正常模式
+  - =main_only= 仅打印菜单框架（样式）
+  - =help= 帮助模式，大半白底黑字
+  - =setting= 设置模式，在正常模式基础上增加变量的显示和设置功能
+  - =help_only= 仅打印帮助模式下的菜单框架
+- =cmenu_set_type()=
+  设置菜单的类型,类型列表:
+  1. =normal= 默认
+  2. =main_only= 仅显示主界面
+  3. =help= 帮助模式
+  4. =setting= 设置模式
+  5. =help_only= 仅显示帮助界面，无输入处理
+- =cmenu_add_text()=
+  添加菜单选项，其选项解释如下：
+  1. =id= 菜单项应被插入的位置（插入后），若值为0则插入在最后，若值大于列表长度
+     则也插入在最后
+  2. =text= 菜单项显示的文字
+  3. =describe= 菜单项对应的描述信息
+  4. =func= 选择菜单项后执行的函数
+  5. =var= 在 =setting= 类型菜单中显示、更改的变量指针
+  6. =type= 在 =setting= 类型菜单中菜单项的类型，可选值如下：
+     - =number= 设置类型为数字的参数(可选参数部分)
+     - =button= 设置类型为按钮/开关
+  7. =foot= 在 =setting= =number= 设定下变量变化的步长
+  8. =max= 在 =setting= =number= 设定下变量变化的上限，与下限相等时采用默认值
+  9. =mix= 在 =setting= =number= 设定下变量变化的下限，与上限相等时采用默认值
+- =cmenu_set_text()=
+  添加菜单选项，其选项解释如下：
+  1. =id= 同上
+  2. =tag= 指定要更改的变量，可选值具体含义参上。所有可选值如下
+    Key: "text", "describe", "func", "var", "type", "foot", "max", "min"
+  3. =value= 赋值内容
+- =cmenu_show()=
   显示菜单程序，返回经过处理的输入
   - 输入与返回值对照
     - 数字 => int型数字
     - 空格/回车 => 对应选项的序号
-    - 字符 => int型字符
+    - 部分字符 => int型字符ASCII
     - =q= / =ESC= => 0
 ***** 实际使用
 参考使用代码：
 #+begin_src c
   #include "/path/to/file/tools.h"    //引用头文件
 
+  int var = 0;
+
+  static void func()
+  {
+          endwin();
+          printf("Exit safety\nThe var is:%d\n", var);
+          exit(0);
+  }
+
   int main()
   {
-          int input = 0;
-          struct ctools ctools = ctools_init();
-          struct ctools_menu m = ctools.menu;
-          struct ctools_menu_t *menu;
+          cmenu menu = cmenu_create();
+          cmenu_set_title(menu, "This is title");
+          cmenu_add_text(menu, 0, "text", "describe", func, &var, "number", 0, 0, 0);
+          cmenu_add_text(menu, 0, "Second", "describe 2", NULL, NULL, NULL, 0, 0, 0);
+          cmenu_add_text(menu, 0, "Third", NULL, NULL, NULL, NULL, 0, 0, 0);
+          cmenu_add_text(menu, 0, "Fourth", NULL, NULL, NULL, NULL, 0, 0, 0);
+          cmenu_add_text(menu, 2, "Should be 2nd", "describe 2", NULL, NULL, NULL, 0, 0, 0);
+          cmenu_add_text(menu, 3, "setting", "setting or normal?", NULL, NULL, NULL, 0, 0, 0);
+          cmenu_add_text(menu, 4, "normal", "normal!", NULL, NULL, NULL, 0, 0, 0);
 
-          m.data_init(&menu);
-          m.set_title(menu, "This is the title");
-          m.set_text(menu, "No.1", "No.2", "No.3", "No.4", NULL);
-          m.set_text_data(menu, "describe", "n%sn%s",
-                          "This is the describe of No.2",
-                          "This is for the No.4");
-
-          m.ncurses_init();
-          input = m.show(menu);
+          ctools_ncurses_init();
+          while(1) {
+                  int in = cmenu_show(menu);
+                  if (in == 3) cmenu_set_type(menu, "setting");
+                  else if (in == 4) cmenu_set_type(menu, "normal");
+          }
           endwin();
-          printf("Result:%d '%c'\n", input, input);
           return 0;
   }
 
@@ -145,29 +144,5 @@
 
 在默认界面中，按下非操作键外的字符按键会返回字符，其他的均只返回数字(主要是防范
 出现了非单数的编号的内容选项导致选择不了)
-**** 其他早期菜单
-- =Menu= 函数，用于打印一个简陋的菜单界面，并在一定的程度上提供可视化选择（高亮
-  当前选中项，回车、空格确认，或者直接输入要选择的数字），程序会统一返回对应的字
-  符值（不是整数值！）//
-  使用的相关代码
-  #+begin_src c
-    char *text[] = {    //用作储存要显示的选项
-    "选项1",
-    "选项2",
-    ".....",
-    "选项n"
-    };
-    int main(void)
-    {
-            Menu("菜单标题", text, allChose, allList);    //allChose为总选项数，allList为列数
-            return 0;
-    }
-  #+end_src
-  
-- =Menu2= 用于打印菜单的边框
-  #+begin_quote
-  其中的选项内容为程序额外添加的，
-  #+end_quote
-- =Menu3= 与 =Menu2= 函数区别不大，主要就是没有翻页提示以及提示语变为了 =按任意键返回=
 **** 配置文件解读程序
 懒了，不想写了，自己看 =include/tools.h= 最后面的部分内容

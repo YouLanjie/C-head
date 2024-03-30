@@ -9,18 +9,19 @@
  */
 extern int kbhit()
 {
-	struct termios oldt, newt;
-	int ch;
-	int oldf;
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	fcntl(STDIN_FILENO, F_SETFL, oldf);
+	struct termios new_attr, old_attr;
+	/* 设置无缓冲输入 */
+	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	new_attr = old_attr;
+	new_attr.c_lflag &= ~(ICANON | ECHO);
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	/* 设置无阻塞 */
+	int old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
+	int ch = getchar();
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	fcntl(STDIN_FILENO, F_SETFL, old_fl);
+	/* 将输入内容“塞”回到输入流中 */
 	if (ch != EOF) {
 		ungetc(ch, stdin);
 		return 1;
@@ -33,18 +34,19 @@ extern int kbhit()
  */
 extern int kbhitGetchar()
 {
-	struct termios oldt, newt;
-	int ch;
-	int oldf;
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	fcntl(STDIN_FILENO, F_SETFL, oldf);
+	struct termios new_attr, old_attr;
+	/* 设置无缓冲输入 */
+	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	new_attr = old_attr;
+	new_attr.c_lflag &= ~(ICANON | ECHO);
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	/* 设置无阻塞 */
+	int old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
+	int ch = getchar();
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	fcntl(STDIN_FILENO, F_SETFL, old_fl);
+	/* 将输入内容“塞”回到输入流中 */
 	if (ch != EOF) {
 		ungetc(ch, stdin);
 		return ch;
@@ -52,24 +54,21 @@ extern int kbhitGetchar()
 	return 0;
 }
 
-/* 利用终端特性做的getch */
-extern int _getch()
+extern int _getch(void)
 {
-	struct termios tm, tm_old;
-	int fd = 0, ch;
-
-	if (tcgetattr(fd, &tm) < 0) {	//保存现在的终端设置
-		return -1;
-	}
-	tm_old = tm;
-	cfmakeraw(&tm);		//更改终端设置为原始模式，该模式下所有的输入数据以字节为单位被处理
-	if (tcsetattr(fd, TCSANOW, &tm) < 0) {	//设置上更改之后的设置
-		return -1;
-	}
-	ch = getchar();
-	if (tcsetattr(fd, TCSANOW, &tm_old) < 0) {	//更改设置为最初的样子
-		return -1;
-	}
+	struct termios new_attr, old_attr;
+	// 保存现在的终端设置
+	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	new_attr = old_attr;
+	// 更改终端设置为原始模式，该模式下所有的输入数据以字节为单位被处理
+	// cfmakeraw(&new_attr);
+	// 取消行缓冲和回显
+	new_attr.c_lflag &= ~(ICANON | ECHO);
+	//设置上更改之后的设置
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	int ch = getchar();
+	// 更改设置为最初的样子
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 	return ch;
 }
 
