@@ -21,6 +21,7 @@
 /* signal() */
 #include <stdarg.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <wait.h>
 #include <pthread.h>
 #include <ncurses.h>
