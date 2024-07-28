@@ -59,7 +59,7 @@ enum TYPE {t_normal = 0, t_main_only, t_help, t_setting, t_help_only};
 
 /* 移动焦点选项 */
 static int set_focus(Menu *menu, int id)
-{/*{{{*/
+{
 	if (menu->text == NULL)
 		return -1;
 	if (menu->focus == NULL)
@@ -76,7 +76,7 @@ static int set_focus(Menu *menu, int id)
 	while (menu->focus->next != NULL && menu->focus->id < id)
 		menu->focus = menu->focus->next;
 	return 0;
-}/*}}}*/
+}
 
 /* ==================================================
  * Desplay
@@ -84,18 +84,18 @@ static int set_focus(Menu *menu, int id)
 
 /* 填充颜色 */
 static int dsp_fill(int y1, int x1, int y2, int x2)
-{/*{{{*/
+{
 	for (int i = y1; i < y2; i++) {
 		for (int i2 = x1; i2 < x2; i2++) {
 			mvaddch(i, i2, ' ');
 		}
 	}
 	return 0;
-}/*}}}*/
+}
 
 /* 绘制屏幕背景 */
 static int dsp_background(Menu * menu)
-{/*{{{*/
+{
 	if (menu == NULL)
 		return -1;
 	int cond = menu->type == t_normal || menu->type == t_setting;
@@ -107,8 +107,7 @@ static int dsp_background(Menu * menu)
 	for (int i = 1; i < COLS; i++) {
 		mvaddstr(4, i, LineH);		/* 第二横线 */
 		mvaddstr(LINES - 1, i, LineH);	/* 第三横线 */
-		cond && mvaddstr(6, i, LineH);	/* 第四横线 */
-		
+		if (cond) mvaddstr(6, i, LineH);/* 第四横线 */
 	}
 	if (cond) {
 		mvaddstr(5, COLS / 4 - 3, "选项");
@@ -139,11 +138,11 @@ static int dsp_background(Menu * menu)
 	}
 	color_off(C_WHITE_BLUE);
 	return 0;
-}/*}}}*/
+}
 
 /* 显示选项 */
 static int dsp_text(Menu *menu, int focus, int hide_len, int len)
-{/*{{{*/
+{
 	if (menu == NULL || menu->text == NULL)
 		return -1;
 	int limt = len <= LINES - 10 ? len : LINES - 10;
@@ -179,10 +178,10 @@ static int dsp_text(Menu *menu, int focus, int hide_len, int len)
 	color_off(C_BLUE_WHITE);
 	color_off(C_WHITE_YELLOW);
 	return 0;
-}/*}}}*/
+}
 
 static int dsp_range_print(char *ch, int x_start, int y_start, int width, int heigh, int hide, int focus)
-{/*{{{*/
+{
 	int count = 0,
 	    line_num = 0;
 	char buf[5] = "0";
@@ -198,7 +197,7 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 			/* 行数增加 */
 			line_num++;
 			/* 移动光标 */
-			cond_print && move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
+			if (cond_print) move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
 			/*kbhitGetchar();*/
 			/* 字符清零 */
 			count = 0;
@@ -224,7 +223,8 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 
 		if (line_num == focus - 1)
 			color_onf(C_BLACK_WHITE, C_WHITE_BLACK);
-		cond_print && printw("%s", buf);
+		if (cond_print)
+			printw("%s", buf);
 		if (line_num == focus - 1)
 			color_onf(C_WHITE_BLACK, C_BLACK_WHITE);
 		/* 字符指针下移 */
@@ -232,11 +232,11 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 	}
 	color_off(C_BLACK_WHITE);
 	return line_num + 1;
-}/*}}}*/
+}
 
 /* 显示描述 */
 static void dsp_describe(Node *node, int focus, int hide_len, int *len)
-{/*{{{*/
+{
 	if (node == NULL)    /* 若数据为空 */
 		return;
 	if (node->describe == NULL)    /* 若数据为空 */
@@ -244,10 +244,10 @@ static void dsp_describe(Node *node, int focus, int hide_len, int *len)
 
 	*len = dsp_range_print(node->describe, COLS / 2 + 1, 7, COLS / 2 - 3, LINES - 10, hide_len, focus);
 	return;
-}/*}}}*/
+}
 
 static void dsp_help(Menu * data, int focus, int hide_len, int *len)
-{/*{{{*/
+{
 	char *tmp = "";
 	char *ch_1 = NULL,
 	     *ch_2 = NULL,
@@ -277,7 +277,7 @@ static void dsp_help(Menu * data, int focus, int hide_len, int *len)
 	if (ch_3 != tmp)
 		free(ch_3);
 	return;
-}/*}}}*/
+}
 
 
 /* ==================================================
@@ -286,7 +286,7 @@ static void dsp_help(Menu * data, int focus, int hide_len, int *len)
 
 /* 处理输入(菜单选项上下移动) */
 static int Input(int input, int *focus, int *hide_len, int allChose, int y_start)
-{/*{{{*/
+{
 	input = (input > 'a' && input < 'z' && input != 'g') ? input - 32 : input;
 	switch (input) {
 	case 0x1B:
@@ -372,11 +372,11 @@ static int Input(int input, int *focus, int *hide_len, int allChose, int y_start
 	}
 	clear();
 	return 0;
-}/*}}}*/
+}
 
 /* 显示 */
 extern int cmenu_show(cmenu menu)
-{/*{{{*/
+{
 	Menu *p = menu;
 	int input = 1,			/* 保存输入 */
 	    focus_id = 1,		/* 保存焦点选项的数字 */
@@ -542,7 +542,7 @@ extern int cmenu_show(cmenu menu)
 		}
 	}
 	return 0;
-}/*}}}*/
+}
 
 
 /* ==================================================
@@ -551,7 +551,7 @@ extern int cmenu_show(cmenu menu)
 
 /* 初始化变量 */
 extern cmenu cmenu_create()
-{/*{{{*/
+{
 	Menu *p;
 	p = malloc(sizeof(Menu));
 	p->title = NULL;
@@ -559,10 +559,10 @@ extern cmenu cmenu_create()
 	p->focus = NULL;
 	p->type  = 0;
 	return p;
-}/*}}}*/
+}
 
 extern void cmenu_set_title(cmenu menu, char *title)
-{/*{{{*/
+{
 	Menu *p = menu;
 	char *t = NULL;
 	if (p == NULL || title == NULL || *title == '\0') return;
@@ -570,24 +570,23 @@ extern void cmenu_set_title(cmenu menu, char *title)
 	strcpy(t, title);
 	p->title = t;
 	return;
-}/*}}}*/
+}
 
 extern void cmenu_set_type(cmenu menu, char *type_str)
-{/*{{{*/
+{
 	char *key[] = {"normal", "main_only", "help", "setting", "help_only"};
 	Menu *p = menu;
 	if (p == NULL || type_str == NULL || *type_str == '\0') return;
-	
 	for (int i = 0; i < 5; i++) {
 		if (!strcmp(key[i], type_str))
 			p->type = i;
 	}
 	return;
-}/*}}}*/
+}
 
 /* Add a node */
 static Node *add_node(Menu *menu, int id)
-{/*{{{*/
+{
 	Node *pNew = NULL,
 	     *pLast = NULL,
 	     *pNext = NULL;
@@ -616,7 +615,8 @@ static Node *add_node(Menu *menu, int id)
 		pNew = malloc(sizeof(Node));
 		menu->text = pNew;
 	}
-	pLast != NULL && (pLast->next = pNew);
+	if (pLast != NULL)
+		pLast->next = pNew;
 
 	pNew->id = id_last + 1;
 	pNew->text = NULL;
@@ -636,20 +636,20 @@ static Node *add_node(Menu *menu, int id)
 	pNew = pNew->next;
 	while (pNew != NULL) pNew->id++, pNew = pNew->next;
 	return pLast;
-}/*}}}*/
+}
 
 static int type_chose(char *type)
-{/*{{{*/
+{
 	if (type == NULL) return 0;
 #define S(t) (strcmp(t, type) == 0)
 	if (S("number")) return 1;
 	else if (S("toggle") || S("button")) return 2;
 #undef S
 	return 0;
-}/*}}}*/
+}
 
 static int set_node(Node *node, void *arg[][2])
-{/*{{{*/
+{
 	if (!node)
 		return -1;
 	int i = 0,
@@ -667,21 +667,21 @@ static int set_node(Node *node, void *arg[][2])
 			str = malloc(sizeof(char) * (strlen(arg[i][1]) + 1));
 			strcpy(str, arg[i][1]);
 		}
-		i2 ^ 0 || (node->text = str);
-		i2 ^ 1 || (node->describe = str);
-		i2 ^ 2 || (node->function = arg[i][1]);
-		i2 ^ 3 || (node->var.var = arg[i][1]);
-		i2 ^ 4 || (node->var.type = type_chose(arg[i][1]));
-		i2 ^ 5 || (node->var.foot = (int)(long)arg[i][1]);
-		i2 ^ 6 || (node->var.max = (int)(long)arg[i][1]);
-		i2 ^ 7 || (node->var.min = (int)(long)arg[i][1]);
+		if (i2 == 0) (node->text = str);
+		else if (i2 == 1) (node->describe = str);
+		else if (i2 == 2) (node->function = arg[i][1]);
+		else if (i2 == 3) (node->var.var = arg[i][1]);
+		else if (i2 == 4) (node->var.type = type_chose(arg[i][1]));
+		else if (i2 == 5) (node->var.foot = (int)(long)arg[i][1]);
+		else if (i2 == 6) (node->var.max = (int)(long)arg[i][1]);
+		else if (i2 == 7) (node->var.min = (int)(long)arg[i][1]);
 	}
 	return 0;
-}/*}}}*/
+}
 
 /* Key: "text", "describe", "func", "var", "type", "foot", "max", "min" */
 extern void cmenu_add_text(cmenu menu, int id, char *text, char *describe, void (*func)(), int *var, char *type, int foot, int max, int min)
-{/*{{{*/
+{
 	foot = foot ? foot: 1;
 	max <= min && (max = 10000000, min = -10000000);
 
@@ -706,11 +706,11 @@ extern void cmenu_add_text(cmenu menu, int id, char *text, char *describe, void 
 	set_node(node, arg);
 	set_focus(p, last_id);
 	return;
-}/*}}}*/
+}
 
 /* Key: "text", "describe", "func", "var", "type", "foot", "max", "min" */
 extern void cmenu_set_text(cmenu menu, int id, char *tag, void *value)
-{/*{{{*/
+{
 	Menu *p = menu;
 	if (!p)
 		return;
@@ -723,10 +723,10 @@ extern void cmenu_set_text(cmenu menu, int id, char *tag, void *value)
 	set_focus(p, id);
 	set_node(p->focus, arg);
 	set_focus(p, last_id);
-}/*}}}*/
+}
 
 extern void cmenu_del_text(cmenu menu, int id)
-{/*{{{*/
+{
 	Menu *p = menu;
 	Node *pNew = NULL,
 	     *pLast = NULL,
@@ -739,13 +739,13 @@ extern void cmenu_del_text(cmenu menu, int id)
 		pNew = pNew->next;
 	}
 	pNext = pNew->next;
-	pLast != NULL && (pLast->next = pNext);
-	p->text == pNew && (p->text = NULL);
-	p->focus == pNew && (p->focus = pNext ? pNext : pLast);
+	if (pLast != NULL) pLast->next = pNext;
+	if (p->text == pNew) p->text = NULL;
+	if (p->focus == pNew) p->focus = pNext ? pNext : pLast;
 	free(pNew);
 
 	pNew = pNext;
 	while (pNew != NULL) pNew->id--, pNew = pNew->next;
 	return;
-}/*}}}*/
+}
 
