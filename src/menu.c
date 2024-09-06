@@ -1,4 +1,5 @@
 #include "include.h"
+#ifdef __linux
 
 // 定义宏
 #define LineH "─"
@@ -748,4 +749,6 @@ extern void cmenu_del_text(cmenu menu, int id)
 	while (pNew != NULL) pNew->id--, pNew = pNew->next;
 	return;
 }
+
+#endif
 

@@ -1,9 +1,13 @@
 #include "include.h"
-#include <termios.h>
 #include <fcntl.h>
+
+#ifdef __linux__
+#include <termios.h>
 #include <sys/ioctl.h>
 #include <asm-generic/ioctls.h>
+#endif
 
+#ifdef __linux__
 /*
  * 判断有没有输入
  */
@@ -28,12 +32,14 @@ extern int kbhit()
 	}
 	return 0;
 }
+#endif
 
 /*
  * 不阻塞输入
  */
 extern int kbhitGetchar()
 {
+#ifdef __linux__
 	struct termios new_attr, old_attr;
 	/* 设置无缓冲输入 */
 	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
@@ -52,10 +58,17 @@ extern int kbhitGetchar()
 		return ch;
 	}
 	return 0;
+#endif
+
+#ifdef _WIN32
+	if (kbhit() != 0) return getch();
+	return 0;
+#endif
 }
 
 extern int _getch(void)
 {
+#ifdef __linux__
 	struct termios new_attr, old_attr;
 	// 保存现在的终端设置
 	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
@@ -70,22 +83,43 @@ extern int _getch(void)
 	// 更改设置为最初的样子
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 	return ch;
+#endif
+
+#ifdef _WIN32
+	return getch();
+#endif
 }
 
 /* Get the size(x) of the window */
 extern int get_winsize_col()
 {
+#ifdef __linux__
 	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 	return size.ws_col;
+#endif
+
+#ifdef _WIN32
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#endif
 }
 
 /* Get the size(y) of the window */
 extern int get_winsize_row()
 {
+#ifdef __linux__
 	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 	return size.ws_row;
+#endif
+
+#ifdef _WIN32
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	return csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+#endif
 }
 
 /* 读取文件 */
@@ -114,6 +148,7 @@ extern char *_fread(FILE *fp)
 
 extern void ctools_ncurses_init()
 {
+#ifdef __linux__
 	setlocale(LC_ALL, "zh_CN.UTF8");
 	initscr();
 	cbreak();		/* 取消行缓冲 */
@@ -131,5 +166,6 @@ extern void ctools_ncurses_init()
 	init_pair(C_WHITE_YELLOW, COLOR_WHITE, COLOR_YELLOW);	/* 黄底白字 */
 	init_pair(C_BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);	/* 白底黑字 */
 	init_pair(C_WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);	/* 黑底白字 */
+#endif
 	return;
 }

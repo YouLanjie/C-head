@@ -20,18 +20,28 @@
 #include <signal.h>
 /* signal() */
 #include <stdarg.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
-#include <wait.h>
 #include <pthread.h>
-#include <ncurses.h>
 #include <locale.h>
+
+#ifdef __linux__
+#include <sys/ioctl.h>
+#include <wait.h>
+#include <ncurses.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#endif
 
 /*
  * kbhit getch
  */
+#ifdef __linux__
 /* 判断有没有输入 */
 extern int kbhit();
+#endif
 /* 利用终端特性做的getch */
 extern int _getch(void);
 /* 不阻塞输入 */
@@ -47,6 +57,7 @@ extern int print_in_box(char *ch, int x_start, int y_start, int width, int heigh
 /* 初始化Ncurses库(开启ncurses模式) */
 extern void ctools_ncurses_init();
 
+#ifdef __linux__
 /*
  * 新菜单
  */
@@ -67,6 +78,7 @@ extern void cmenu_set_text(cmenu menu, int id, char *tag, void *value);
 extern void cmenu_del_text(cmenu menu, int id);
 /* 显示菜单 */
 extern int cmenu_show(cmenu menu);
+#endif
 
 /*
  * 读取配置文件
