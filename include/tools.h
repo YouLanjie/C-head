@@ -42,6 +42,8 @@ extern int get_winsize_col();
 extern int get_winsize_row();
 /* 读取文件 */
 extern char *_fread(FILE *fp);
+/* 在指定范围内打印 */
+extern int print_in_box(char *ch, int x_start, int y_start, int width, int heigh, int hide, int focus, char *color_code, int flag_hl);
 /* 初始化Ncurses库(开启ncurses模式) */
 extern void ctools_ncurses_init();
 
