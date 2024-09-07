@@ -752,3 +752,27 @@ extern void cmenu_del_text(cmenu menu, int id)
 
 #endif
 
+extern void ctools_ncurses_init()
+{
+#ifdef __linux__
+	setlocale(LC_ALL, "zh_CN.UTF8");
+	initscr();
+	cbreak();		/* 取消行缓冲 */
+	noecho();		/* 不回显 */
+	curs_set(0);		/* 隐藏光标 */
+	if (has_colors() == FALSE) {
+		endwin();
+		exit(-1);
+	}
+	start_color();
+	/* 初始化颜色对 */
+	/*       颜色对           字色（表）   底色（背景） */
+	init_pair(C_WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);	/* 蓝底白字 */
+	init_pair(C_BLUE_WHITE, COLOR_BLUE, COLOR_WHITE);	/* 白底蓝字 */
+	init_pair(C_WHITE_YELLOW, COLOR_WHITE, COLOR_YELLOW);	/* 黄底白字 */
+	init_pair(C_BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);	/* 白底黑字 */
+	init_pair(C_WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);	/* 黑底白字 */
+#endif
+	return;
+}
+
