@@ -185,42 +185,39 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 {
 	int count = 0,
 	    line_num = 0;
-	char buf[5] = "0";
 
 	color_on(C_BLACK_WHITE);
-	dsp_fill(y_start, x_start, y_start + heigh + 2, x_start + width);
+	dsp_fill(y_start, x_start, y_start + heigh + 2, x_start + width + 1);
 	move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
-	while (ch && *ch != '\0') {
-		int cond_out = (count + (*ch & 0x80 ? 2 : 1) > width && ch && *ch != '\0');
+	while (ch && *ch != '\0' && width >= 8) {
+		char buf[20] = {*ch, '\0', '\0', '\0'};
+		if (*ch & 0x80) {
+			buf[1] = ch[1];
+			buf[2] = ch[2];
+			count++;
+			if (strcmp("…", buf) == 0) count--;
+		} else if (*ch == '\t') {
+			count += 7;
+			strcpy(buf, "        ");
+		}
+		count++;
+
+		int cond_out = (count > width - 1 && ch && *ch != '\0');
 		int cond_print = (line_num - hide >= 0 && line_num - hide < heigh);
 
 		if (cond_out || *ch == '\n' || *ch == '\r') {
 			/* 行数增加 */
 			line_num++;
-			/* 移动光标 */
-			if (cond_print) move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
-			/*kbhitGetchar();*/
 			/* 字符清零 */
 			count = 0;
+			/* 移动光标 */
+			if (cond_print) move(y_start + line_num - (hide > line_num ? 0 : hide) + 1, x_start + 1);
 			/* 字符指针下移 */
 			if (*ch == '\n' || *ch == '\r') {
 				ch++;
-				continue;
 			}
+			continue;
 		}
-
-		buf[0] = *ch;
-		buf[1] = '\0';
-		if (*ch & 0x80) {
-			buf[1] = ch[1];
-			buf[2] = ch[2];
-			buf[3] = '\0';
-			ch+=2;
-			count += 3;
-		} else if (*ch == '\t')
-			count += 8;
-		else
-			count++;
 
 		if (line_num == focus - 1)
 			color_onf(C_BLACK_WHITE, C_WHITE_BLACK);
@@ -229,7 +226,7 @@ static int dsp_range_print(char *ch, int x_start, int y_start, int width, int he
 		if (line_num == focus - 1)
 			color_onf(C_WHITE_BLACK, C_BLACK_WHITE);
 		/* 字符指针下移 */
-		ch++;
+		ch += *ch & 0x80 ? 3 : 1;
 	}
 	color_off(C_BLACK_WHITE);
 	return line_num + 1;
@@ -274,7 +271,7 @@ static void dsp_help(Menu * data, int focus, int hide_len, int *len)
 		i++;
 	} while (data->focus->next != NULL);
 
-	*len = dsp_range_print(ch_3, 2, 5, COLS - 4, LINES - 8, hide_len, focus);
+	*len = dsp_range_print(ch_3, 2, 5, COLS - 5, LINES - 8, hide_len, focus);
 	if (ch_3 != tmp)
 		free(ch_3);
 	return;
