@@ -302,7 +302,8 @@ static int Input(int input, int *focus, int *hide_len, int allChose, int y_start
 				break;
 			}
 		} else {
-			clear();
+			erase();
+			/*clear();*/
 			return '0';
 		}
 		break;
@@ -350,7 +351,8 @@ static int Input(int input, int *focus, int *hide_len, int allChose, int y_start
 		break;
 	case 'Q':
 	case '0':
-		clear();
+		/*clear();*/
+		erase();
 		return '0';
 		break;
 	case ' ':
@@ -368,7 +370,8 @@ static int Input(int input, int *focus, int *hide_len, int allChose, int y_start
 		return input;
 		break;
 	}
-	clear();
+	/*clear();*/
+	erase();
 	return 0;
 }
 
