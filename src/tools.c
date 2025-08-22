@@ -3,8 +3,6 @@
 
 #ifdef __linux__
 #include <termios.h>
-#include <sys/ioctl.h>
-#include <asm-generic/ioctls.h>
 #endif
 
 #ifdef __linux__
@@ -14,9 +12,10 @@
 extern int kbhit()
 {
 	struct termios new_attr, old_attr;
-	/* 设置无缓冲输入 */
+	/* 保存现在的终端设置 */
 	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	new_attr = old_attr;
+	/* 设置无缓冲输入 */
 	new_attr.c_lflag &= ~(ICANON | ECHO);
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
 	/* 设置无阻塞 */
@@ -41,22 +40,16 @@ extern int kbhitGetchar()
 {
 #ifdef __linux__
 	struct termios new_attr, old_attr;
-	/* 设置无缓冲输入 */
 	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	new_attr = old_attr;
 	new_attr.c_lflag &= ~(ICANON | ECHO);
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
-	/* 设置无阻塞 */
 	int old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
 	int ch = getchar();
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 	fcntl(STDIN_FILENO, F_SETFL, old_fl);
-	/* 将输入内容“塞”回到输入流中 */
-	if (ch != EOF) {
-		ungetc(ch, stdin);
-		return ch;
-	}
+	if (ch != EOF) return ch;
 	return 0;
 #endif
 
@@ -66,27 +59,83 @@ extern int kbhitGetchar()
 #endif
 }
 
+#ifdef __linux__
+static struct termios old_attr;
+static void (*old_handler[256])(int) = {NULL};
+static int old_fl = 0;
+
+static void signal_handler(int sig)
+{
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return;
+	fcntl(STDIN_FILENO, F_SETFL, old_fl);
+	if (old_handler[sig]) old_handler[sig](sig);
+	signal(sig, old_handler[sig] ? old_handler[sig] : SIG_DFL);
+	kill(getpid(), sig);
+	return;
+}
+
+#endif
+
 extern int _getch(void)
 {
 #ifdef __linux__
-	struct termios new_attr, old_attr;
-	// 保存现在的终端设置
 	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	old_handler[SIGINT] = signal(SIGINT, signal_handler);
+	old_handler[SIGSEGV] = signal(SIGSEGV, signal_handler);
+
+	static struct termios new_attr;
 	new_attr = old_attr;
-	// 更改终端设置为原始模式，该模式下所有的输入数据以字节为单位被处理
-	// cfmakeraw(&new_attr);
-	// 取消行缓冲和回显
 	new_attr.c_lflag &= ~(ICANON | ECHO);
-	//设置上更改之后的设置
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	int ch = getchar();
-	// 更改设置为最初的样子
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+
+	signal(SIGINT, old_handler[SIGINT] ? old_handler[SIGINT] : SIG_DFL);
+	signal(SIGSEGV, old_handler[SIGSEGV] ? old_handler[SIGSEGV] : SIG_DFL);
 	return ch;
 #endif
 
 #ifdef _WIN32
 	return getch();
+#endif
+}
+
+extern int _getch_cond(int *cond)
+{
+	if (!cond) return -1;
+#ifdef __linux__
+	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	old_handler[SIGINT] = signal(SIGINT, signal_handler);
+	old_handler[SIGSEGV] = signal(SIGSEGV, signal_handler);
+	old_handler[SIGTERM] = signal(SIGTERM, signal_handler);
+
+	static struct termios new_attr;
+	new_attr = old_attr;
+	new_attr.c_lflag &= ~(ICANON | ECHO);
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
+	old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
+	int ch = EOF;
+	while (cond && *cond && ch == EOF) {
+		ch = getchar();
+		usleep(10000);
+	}
+	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+
+	signal(SIGINT, old_handler[SIGINT] ? old_handler[SIGINT] : SIG_DFL);
+	signal(SIGSEGV, old_handler[SIGSEGV] ? old_handler[SIGSEGV] : SIG_DFL);
+	signal(SIGTERM, old_handler[SIGTERM] ? old_handler[SIGTERM] : SIG_DFL);
+	return ch;
+#endif
+
+#ifdef _WIN32
+	while (cond && *cond && !kbhit()) {
+		Sleep(10);
+	}
+	if (kbhit() != 0) return getch();
+	return 0;
 #endif
 }
 

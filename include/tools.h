@@ -44,6 +44,7 @@ extern int kbhit();
 #endif
 /* 利用终端特性做的getch */
 extern int _getch(void);
+extern int _getch_cond(int *cond);
 /* 不阻塞输入 */
 extern int kbhitGetchar();
 /* Get the size(x) of the window(range:0~) */
