@@ -11,18 +11,22 @@
  */
 extern int kbhit()
 {
+	int is_tty = isatty(STDIN_FILENO);
 	struct termios new_attr, old_attr;
 	/* 保存现在的终端设置 */
-	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	new_attr = old_attr;
 	/* 设置无缓冲输入 */
 	new_attr.c_lflag &= ~(ICANON | ECHO);
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
 	/* 设置无阻塞 */
 	int old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
 	int ch = getchar();
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 	fcntl(STDIN_FILENO, F_SETFL, old_fl);
 	/* 将输入内容“塞”回到输入流中 */
 	if (ch != EOF) {
@@ -39,15 +43,19 @@ extern int kbhit()
 extern int kbhitGetchar()
 {
 #ifdef __linux__
+	int is_tty = isatty(STDIN_FILENO);
 	struct termios new_attr, old_attr;
-	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	new_attr = old_attr;
 	new_attr.c_lflag &= ~(ICANON | ECHO);
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
 	int old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
 	int ch = getchar();
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 	fcntl(STDIN_FILENO, F_SETFL, old_fl);
 	if (ch != EOF) return ch;
 	return 0;
@@ -66,7 +74,9 @@ static int old_fl = 0;
 
 static void signal_handler(int sig)
 {
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return;
+	int is_tty = isatty(STDIN_FILENO);
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return;
 	fcntl(STDIN_FILENO, F_SETFL, old_fl);
 	if (old_handler[sig]) old_handler[sig](sig);
 	signal(sig, old_handler[sig] ? old_handler[sig] : SIG_DFL);
@@ -79,17 +89,21 @@ static void signal_handler(int sig)
 extern int _getch(void)
 {
 #ifdef __linux__
-	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	int is_tty = isatty(STDIN_FILENO);
+	if (is_tty)
+		if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	old_handler[SIGINT] = signal(SIGINT, signal_handler);
 	old_handler[SIGSEGV] = signal(SIGSEGV, signal_handler);
 
 	static struct termios new_attr;
 	new_attr = old_attr;
 	new_attr.c_lflag &= ~(ICANON | ECHO);
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
 	old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	int ch = getchar();
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 
 	signal(SIGINT, old_handler[SIGINT] ? old_handler[SIGINT] : SIG_DFL);
 	signal(SIGSEGV, old_handler[SIGSEGV] ? old_handler[SIGSEGV] : SIG_DFL);
@@ -105,7 +119,9 @@ extern int _getch_cond(int *cond)
 {
 	if (!cond) return -1;
 #ifdef __linux__
-	if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
+	int is_tty = isatty(STDIN_FILENO);
+	if (is_tty)
+		if (tcgetattr(STDIN_FILENO, &old_attr) < 0) return -1;
 	old_handler[SIGINT] = signal(SIGINT, signal_handler);
 	old_handler[SIGSEGV] = signal(SIGSEGV, signal_handler);
 	old_handler[SIGTERM] = signal(SIGTERM, signal_handler);
@@ -113,7 +129,8 @@ extern int _getch_cond(int *cond)
 	static struct termios new_attr;
 	new_attr = old_attr;
 	new_attr.c_lflag &= ~(ICANON | ECHO);
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &new_attr) < 0) return -1;
 	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
 	old_fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_fl | O_NONBLOCK);
@@ -122,7 +139,8 @@ extern int _getch_cond(int *cond)
 		ch = getchar();
 		usleep(10000);
 	}
-	if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
+	if (is_tty)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &old_attr) < 0) return -1;
 
 	signal(SIGINT, old_handler[SIGINT] ? old_handler[SIGINT] : SIG_DFL);
 	signal(SIGSEGV, old_handler[SIGSEGV] ? old_handler[SIGSEGV] : SIG_DFL);
